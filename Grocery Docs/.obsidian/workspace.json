@@ -1,0 +1,154 @@
+{
+  "main": {
+    "id": "b5198fa2d23bb36b",
+    "type": "split",
+    "children": [
+      {
+        "id": "6725837c6fb758d3",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "4d8ea642e8366daa",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "User Stories.md",
+                "mode": "source",
+                "source": false
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "cb12cd084b04c3d8",
+    "type": "split",
+    "children": [
+      {
+        "id": "c550eafb9cd49096",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "229d1857a09733f4",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "6969716e46c7b831",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              }
+            }
+          },
+          {
+            "id": "fe11f7615be6ea2d",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {}
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "72d33e8c4bdbccf8",
+    "type": "split",
+    "children": [
+      {
+        "id": "6ee7b6fd99015bf0",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "9c4cf779617214fb",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "User Stories.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "02b7a7d56200a02a",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "User Stories.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              }
+            }
+          },
+          {
+            "id": "ab0248f45e0de3a1",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true
+              }
+            }
+          },
+          {
+            "id": "2d7873461c2d0e01",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "User Stories.md"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false
+    }
+  },
+  "active": "4d8ea642e8366daa",
+  "lastOpenFiles": [
+    "Welcome.md",
+    "User Stories.md"
+  ]
+}
