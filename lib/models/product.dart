@@ -3,7 +3,10 @@ import 'package:grocy/models/review.dart';
 import 'package:grocy/models/tag.dart';
 
 class Product {
+  final String key;
+
   Product(
+    this.key,
     this.name,
     this.description
   );
