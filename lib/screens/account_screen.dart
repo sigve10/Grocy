@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:grocy/screens/welcome_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:grocy/main.dart';
-import 'package:grocy/screens/login_screen.dart';
 
-
+/// Provides user profile management via Supabase.
+/// Users can see and update their profile, while also signing out.
+///
 /// Followed a user management app from Supabase, to add authentication with proper security.
-/// https://supabase.com/docs/guides/getting-started/tutorials/with-flutter?queryGroups=platform&platform=android
-/// Should reference this accordingly, just put it here to remember for later.
+/// https://supabase.com/docs/guides/getting-started/tutorials/with-flutter
 class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
 
@@ -14,14 +15,15 @@ class AccountPage extends StatefulWidget {
   State<AccountPage> createState() => _AccountPageState();
 }
 
+/// Manages the state of user interactions and data.
 class _AccountPageState extends State<AccountPage> {
   final _usernameController = TextEditingController();
   final _websiteController = TextEditingController();
 
-  String? _avatarUrl;
   var _loading = true;
 
   /// Called once a user id is received within `onAuthenticated()`
+  /// Retrieves the user's profile from Supabase.
   Future<void> _getProfile() async {
     setState(() {
       _loading = true;
@@ -33,7 +35,6 @@ class _AccountPageState extends State<AccountPage> {
           await supabase.from('profiles').select().eq('id', userId).single();
       _usernameController.text = (data['username'] ?? '') as String;
       _websiteController.text = (data['website'] ?? '') as String;
-      _avatarUrl = (data['avatar_url'] ?? '') as String;
     } on PostgrestException catch (error) {
       if (mounted) context.showSnackBar(error.message, isError: true);
     } catch (error) {
@@ -50,11 +51,13 @@ class _AccountPageState extends State<AccountPage> {
   }
 
   /// Called when user taps `Update` button
+  /// Updates the user's profile in the database.
   Future<void> _updateProfile() async {
     setState(() {
       _loading = true;
     });
     final userName = _usernameController.text.trim();
+    //TODO: Change the name of this.
     final website = _websiteController.text.trim();
     final user = supabase.auth.currentUser;
     final updates = {
@@ -81,23 +84,29 @@ class _AccountPageState extends State<AccountPage> {
     }
   }
 
+  /// Allows user to sign out, taking them back to the welcome page.
   Future<void> _signOut() async {
-    try {
-      await supabase.auth.signOut();
-    } on AuthException catch (error) {
-      if (mounted) context.showSnackBar(error.message, isError: true);
-    } catch (error) {
-      if (mounted) {
-        context.showSnackBar('Unexpected error occurred', isError: true);
-      }
-    } finally {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const LoginPage()),
-        );
-      }
+  try {
+    await supabase.auth.signOut();
+    if (mounted) {
+      // Navigate to the WelcomePage
+      // Push & remove the stack until it matches the predicate, aka our target.
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => const WelcomePage()),
+        // '/' is the root of the stack, aka our home page.
+        ModalRoute.withName('/'),
+      );
+    }
+  } on AuthException catch (error) {
+    if (mounted) context.showSnackBar(error.message, isError: true);
+  } catch (error) {
+    if (mounted) {
+      context.showSnackBar('Unexpected error occurred', isError: true);
     }
   }
+}
+
 
   @override
   void initState() {
@@ -125,6 +134,7 @@ class _AccountPageState extends State<AccountPage> {
           ),
           const SizedBox(height: 18),
           TextFormField(
+            //Todo: research whatever this is mean to be.
             controller: _websiteController,
             decoration: const InputDecoration(labelText: 'Website'),
           ),
