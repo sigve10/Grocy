@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:grocy/screens/tabs_container_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:grocy/screens/welcome_screen.dart';
+import 'package:grocy/screens/account_screen.dart';
 // Supabase redirects do not work with the default URL for flutter, so use this:
 // https://docs.flutter.dev/ui/navigation/url-strategies
 import 'package:flutter_web_plugins/url_strategy.dart';
@@ -24,6 +26,7 @@ Future<void> main() async {
   await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
   // For the redirects on web.
   //TODO: set up android and IOS as well, before we push our project at the end.
+  // https://supabase.com/docs/guides/getting-started/tutorials/with-flutter?queryGroups=platform&platform=android
   usePathUrlStrategy();
   runApp(const MyApp());
 }
@@ -43,7 +46,7 @@ class MyApp extends StatelessWidget {
 
       //Uncomment this and replace the home above for the login- & account pages.
       /* home: supabase.auth.currentSession == null
-          ? const LoginPage()
+          ? const WelcomePage()
           : const AccountPage(), */
     );
   }
