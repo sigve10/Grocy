@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:grocy/screens/account_screen.dart';
-import 'package:grocy/screens/login_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:grocy/screens/tabs_container_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 // Supabase redirects do not work with the default URL for flutter, so use this:
 // https://docs.flutter.dev/ui/navigation/url-strategies
 import 'package:flutter_web_plugins/url_strategy.dart';
+
+final _theme = ThemeData(
+  useMaterial3: true,
+  colorScheme: ColorScheme.fromSeed(
+    brightness: Brightness.light,
+    seedColor: const Color.fromARGB(255, 192, 15, 15),
+  ),
+  textTheme: GoogleFonts.latoTextTheme(),
+);
 
 // If we want, we can set up RLS for security.
 // "These variables will be exposed on the app, and that's completely fine since we have Row Level Security enabled on our Database" - Supabase.
@@ -29,37 +38,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      theme: _theme,
+      home: const TabsContainerScreen(),
 
       //Uncomment this and replace the home above for the login- & account pages.
       /* home: supabase.auth.currentSession == null
           ? const LoginPage()
           : const AccountPage(), */
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
     );
   }
 }
