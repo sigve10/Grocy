@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grocy/screens/product_list.dart';
 
 class TabsContainerScreen extends StatefulWidget {
   const TabsContainerScreen({super.key});
@@ -20,7 +21,7 @@ class _TabsContainerScreenState extends State<TabsContainerScreen> {
         return const Column();
       case 1:
         // Product-list Screen
-        return const Column();
+        return ProductList();
       case 2:
         // Wishlist Screen
         return const Column();
