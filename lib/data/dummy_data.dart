@@ -45,16 +45,16 @@ class DummyData {
 
   static List<Tag> getUserTags() {
     return [
-      Tag("0", "0", TagCategory.miscellaneous),
-      Tag("1", "1", TagCategory.electronics),
-      Tag("2", "2", TagCategory.food),
-      Tag("3", "3", TagCategory.hygiene),
-      Tag("4", "4", TagCategory.medical),
-      Tag("5", "5", TagCategory.miscellaneous),
-      Tag("6", "6", TagCategory.electronics),
-      Tag("7", "7", TagCategory.food),
-      Tag("8", "8", TagCategory.hygiene),
-      Tag("9", "9", TagCategory.medical),
+      Tag("0", "Sigaretter", TagCategory.miscellaneous),
+      Tag("1", "Battery Fresh", TagCategory.electronics),
+      Tag("2", "Battery Fresh (drink)", TagCategory.food),
+      Tag("3", "Hi, Gene", TagCategory.hygiene),
+      Tag("4", "Plaster", TagCategory.medical),
+      Tag("5", "Your mom", TagCategory.miscellaneous),
+      Tag("6", "Whole Laptop", TagCategory.electronics),
+      Tag("7", "Whole Mango", TagCategory.food),
+      Tag("8", "Deodorant (for you)", TagCategory.hygiene),
+      Tag("9", "Aloe vera", TagCategory.medical),
     ];
   }
 }

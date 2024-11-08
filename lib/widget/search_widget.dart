@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:grocy/data/dummy_data.dart';
+import 'package:grocy/models/tag.dart';
 import 'package:grocy/models/tag_category.dart';
 
 class SearchWidget extends ConsumerStatefulWidget {
@@ -29,14 +31,20 @@ class SearchWidgetState extends ConsumerState<SearchWidget> {
           onChanged: null,
         ),
         children: [
-          _SearchWidgetMainTags()
+          _SearchWidgetMainTags(),
+          _SearchWidgetUserTags()
         ],
       )
     );
   }
 }
 
-class _SearchWidgetMainTags extends ConsumerWidget {
+class _SearchWidgetMainTags extends ConsumerStatefulWidget {
+  @override
+  ConsumerState<ConsumerStatefulWidget> createState() => _SearchWidgetMainTagsState();
+}
+
+class _SearchWidgetMainTagsState extends ConsumerState<_SearchWidgetMainTags> {
   static const List<TagCategory> categories = [
     TagCategory.electronics,
     TagCategory.food,
@@ -45,18 +53,66 @@ class _SearchWidgetMainTags extends ConsumerWidget {
     TagCategory.miscellaneous
   ];
 
+  TagCategory? selectedMainTag;
+
+  bool isTagSelected(TagCategory tag) {
+    return selectedMainTag == tag;
+  }
+
+  void setTagCategory(TagCategory? selected) {
+    setState(() {
+      selectedMainTag = selected;
+    });
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Wrap(
       direction: Axis.horizontal,
       spacing: 4.0,
       runSpacing: 0.0,
+      alignment: WrapAlignment.center,
       children: [
         for (TagCategory category in categories)
-          Chip(
-            label: Text(category.displayName)
+          ChoiceChip(
+            selected: (){ return isTagSelected(category); }(),
+            label: Text(category.displayName),
+            onSelected: (bool selected) {setTagCategory(selected ? category : null);},
           )
       ],
+    );
+  }
+
+}
+
+class _SearchWidgetUserTags extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() => _SearchWidgetUserTagsState();
+}
+
+class _SearchWidgetUserTagsState extends State<_SearchWidgetUserTags> {
+  String tagSearch = "";
+  Iterable<Tag> getTagsBySearch (TextEditingValue search) {
+    if (search.text == "") {
+      return const Iterable<Tag>.empty();
+    }
+    return DummyData.getUserTags().where((Tag tag) {
+      return tag.name.toLowerCase().contains(search.text.toLowerCase());
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Autocomplete<Tag>(
+          optionsBuilder: getTagsBySearch,
+          displayStringForOption: (Tag option) => option.name,
+        ),
+        Wrap(
+
+        )
+      ]
     );
   }
 
