@@ -7,11 +7,11 @@ class ProductList extends StatefulWidget {
   const ProductList({super.key});
 
   @override
-  _ProductListState createState() => _ProductListState();
+  ProductListState createState() => ProductListState();
 }
 
 // The state of the ProductList widget.
-class _ProductListState extends State<ProductList> {
+class ProductListState extends State<ProductList> {
   final List<Product> products = DummyData.getProducts();
   List<Product> filteredProducts = [];
 
