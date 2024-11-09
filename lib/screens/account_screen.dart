@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:grocy/screens/welcome_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:grocy/extentions/snackbar_context.dart';
 import 'package:grocy/main.dart';
 
 /// Provides user profile management via Supabase.
@@ -57,13 +58,10 @@ class _AccountPageState extends State<AccountPage> {
       _loading = true;
     });
     final userName = _usernameController.text.trim();
-    //TODO: Change the name of this.
-    final website = _websiteController.text.trim();
     final user = supabase.auth.currentUser;
     final updates = {
       'id': user!.id,
       'username': userName,
-      'website': website,
       'updated_at': DateTime.now().toIso8601String(),
     };
     try {
