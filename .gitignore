@@ -44,5 +44,3 @@ app.*.map.json
 
 # Build tools
 windows
-android
-web
