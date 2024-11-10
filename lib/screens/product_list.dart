@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grocy/main.dart';
 import '../data/dummy_data.dart';
 import '../models/product.dart';
 import 'product_screen.dart';
@@ -12,18 +13,64 @@ class ProductList extends StatefulWidget {
 
 // The state of the ProductList widget.
 class ProductListState extends State<ProductList> {
-  final List<Product> products = DummyData.getProducts();
+  // final List<Product> products = DummyData.getProducts();
+
+  List<Product> supabaseProducts = [];
   List<Product> filteredProducts = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    filteredProducts = products;
+    //filteredProducts = products;
+    fetchProducts();
   }
+
+  Future<void> fetchProducts() async {
+  try {
+
+    // Fetch the data from the 'products' table
+    final List<dynamic> data = await supabase.from('products').select();
+
+    // Print the fetched data for debugging
+    print('Fetched products: $data');
+
+    // Used for debugging while figuring out how to fetch.
+    if (data == null || data.isEmpty) {
+      print('No data fetched from Supabase.');
+    } else {
+      print('Number of products fetched: ${data.length}');
+    }
+
+    // Parse the data from the database into a list of products.
+    List<Product> productsFromSupabase = data
+        .map((item) => Product.fromJson(item as Map<String, dynamic>))
+        .toList();
+
+    // Print the parsed products
+    productsFromSupabase.forEach((product) {
+      print('Product: ${product.name}, Image URL: ${product.imageUrl}');
+    });
+
+    setState(() {
+      supabaseProducts = productsFromSupabase;
+      filteredProducts = supabaseProducts;
+      isLoading = false;
+    });
+  } catch (error, stackTrace) {
+    // Very default prints for debugging
+    print('Error fetching products: $error');
+    print('Stack trace: $stackTrace');
+    setState(() {
+      isLoading = false;
+    });
+  }
+}
 
   void _filterProducts(String query) {
     setState(() {
-      filteredProducts = products
+      //filteredProducts = products
+      filteredProducts = supabaseProducts
           .where((product) =>
               product.name.toLowerCase().contains(query.toLowerCase()))
           .toList();
