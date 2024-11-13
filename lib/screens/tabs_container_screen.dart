@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grocy/screens/barcode_scan_screen.dart';
 import 'package:grocy/screens/product_list.dart';
 
 class TabsContainerScreen extends StatefulWidget {
@@ -18,7 +19,7 @@ class _TabsContainerScreenState extends State<TabsContainerScreen> {
     switch (_selectedPageIndex) {
       case 0:
         // Scan barcode screen
-        return const Column();
+        return BarcodeScanScreen();
       case 1:
         // Product-list Screen
         return ProductList();
