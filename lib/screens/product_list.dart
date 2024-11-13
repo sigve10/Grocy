@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:grocy/widget/search_widget.dart';
 import '../data/dummy_data.dart';
 import '../models/product.dart';
 import 'product_screen.dart';
@@ -36,19 +37,7 @@ class ProductListState extends State<ProductList> {
       appBar: AppBar(),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: "Search products...",
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              onChanged: _filterProducts,
-            ),
-          ),
+          const SearchWidget(),
           Expanded(
             child: ListView.builder(
               itemCount: filteredProducts.length,
