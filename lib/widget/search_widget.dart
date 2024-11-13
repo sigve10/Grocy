@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:grocy/data/dummy_data.dart';
 import 'package:grocy/models/tag.dart';
-import 'package:grocy/models/tag_category.dart';
 
 class SearchWidget extends ConsumerStatefulWidget {
   const SearchWidget({super.key});
@@ -45,21 +44,15 @@ class _SearchWidgetMainTags extends ConsumerStatefulWidget {
 }
 
 class _SearchWidgetMainTagsState extends ConsumerState<_SearchWidgetMainTags> {
-  static const List<TagCategory> categories = [
-    TagCategory.electronics,
-    TagCategory.food,
-    TagCategory.hygiene,
-    TagCategory.medical,
-    TagCategory.miscellaneous
-  ];
+  List<Tag> primaryTags = DummyData.getPrimaryTags();
 
-  TagCategory? selectedMainTag;
+  Tag? selectedMainTag;
 
-  bool isTagSelected(TagCategory tag) {
+  bool isTagSelected(Tag tag) {
     return selectedMainTag == tag;
   }
 
-  void setTagCategory(TagCategory? selected) {
+  void setTagCategory(Tag? selected) {
     setState(() {
       selectedMainTag = selected;
     });
@@ -73,11 +66,11 @@ class _SearchWidgetMainTagsState extends ConsumerState<_SearchWidgetMainTags> {
       runSpacing: 0.0,
       alignment: WrapAlignment.center,
       children: [
-        for (TagCategory category in categories)
+        for (Tag primaryTag in primaryTags)
           ChoiceChip(
-            selected: (){ return isTagSelected(category); }(),
-            label: Text(category.displayName),
-            onSelected: (bool selected) {setTagCategory(selected ? category : null);},
+            selected: (){ return isTagSelected(primaryTag); }(),
+            label: Text(primaryTag.name),
+            onSelected: (bool selected) {setTagCategory(selected ? primaryTag : null);},
           )
       ],
     );

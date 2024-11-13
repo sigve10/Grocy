@@ -95,7 +95,7 @@ class _ProductScreenState extends State<ProductScreen> {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Text(
-                widget.product.description,
+                widget.product.description ?? "",
                 style: Theme.of(context).textTheme.titleMedium!.copyWith(
                   color: Theme.of(context).colorScheme.primary,
                 ),

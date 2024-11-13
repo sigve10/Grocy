@@ -104,7 +104,7 @@ class ProductListState extends State<ProductList> {
                                   Icon(Icons.star,
                                       size: 16, color: Colors.yellow[700]),
                                   Text(
-                                    " ${product.reviewCount} reviews",
+                                    "50 reviews",
                                     style: TextStyle(color: Colors.grey[600]),
                                   ),
                                 ],

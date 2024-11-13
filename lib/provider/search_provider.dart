@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:grocy/models/tag.dart';
-import 'package:grocy/models/tag_category.dart';
 
 class SearchNotifier extends StateNotifier<SearchState> {
   SearchNotifier() : super(const SearchState());
@@ -9,7 +8,7 @@ class SearchNotifier extends StateNotifier<SearchState> {
     state = state.copyWith(searchText: newTerm);
   }
 
-  void setMainTag(TagCategory newTag) {
+  void setMainTag(Tag newTag) {
     state = state.copyWith(mainTag: newTag);
   }
 
@@ -38,7 +37,7 @@ class SearchNotifier extends StateNotifier<SearchState> {
 
 class SearchState {
   final String searchText;
-  final TagCategory? mainTag;
+  final Tag? mainTag;
   final Set<Tag> userTags;
 
   const SearchState({
@@ -49,7 +48,7 @@ class SearchState {
 
   SearchState copyWith({
     String? searchText,
-    TagCategory? mainTag,
+    Tag? mainTag,
     Set<Tag>? userTags
   }) {
     return SearchState(
