@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:grocy/models/product.dart';
-import 'package:grocy/models/rating_set.dart';
-
 /// The screen that displays the details of a product.
 class ProductScreen extends StatefulWidget {
     const ProductScreen({
