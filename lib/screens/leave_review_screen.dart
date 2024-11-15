@@ -31,6 +31,7 @@ class LeaveReviewScreenState extends State<LeaveReviewScreen> {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Leave a Review'),
@@ -75,9 +76,11 @@ class LeaveReviewScreenState extends State<LeaveReviewScreen> {
               "Leave a review",
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
-            const Text(
+             Text(
               "(Optional)",
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+              ),
             ),
             const SizedBox(height: 8),
             TextField(
@@ -108,10 +111,15 @@ class LeaveReviewScreenState extends State<LeaveReviewScreen> {
                     print("Ratings: $selectedRatings");
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
+                    backgroundColor: Theme.of(context).colorScheme.primary,
                   ),
-                  child: const Text("Submit"),
-                ),
+                  child: Text(
+                    "Submit",
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
+                )
               ],
             ),
           ],
