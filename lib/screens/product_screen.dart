@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:grocy/models/product.dart';
 
+import 'leave_review_screen.dart';
+
 /// The screen that displays the details of a product.
 class ProductScreen extends StatefulWidget {
   const ProductScreen({
@@ -124,47 +126,80 @@ class _ProductScreenState extends State<ProductScreen> {
 
             const SizedBox(height: 24),
 
-            ListView.builder(
+            GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 2,
+              ),
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: ratings.length,
               itemBuilder: (context, index) {
-                return Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Container(
-                    alignment: Alignment.center,
-                    padding: const EdgeInsets.all(4.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          ratings[index]['label'] as String,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 4),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: List.generate(5, (starIndex) {
-                            return Icon(
-                              starIndex <
-                                      (ratings[index]['value'] as double)
-                                          .round()
-                                  ? Icons.star
-                                  : Icons.star_border,
-                              size: 10,
-                              color: Colors.amber,
-                            );
-                          }),
-                        ),
-                      ],
+                return Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Container(
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.all(4.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            ratings[index]['label'] as String,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(5, (starIndex) {
+                              return Icon(
+                                starIndex <
+                                        (ratings[index]['value'] as double)
+                                            .round()
+                                    ? Icons.star
+                                    : Icons.star_border,
+                                size: 10,
+                                color: Colors.amber,
+                              );
+                            }),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 );
               },
             ),
+            Row(
+                children: [
+              const Spacer(),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LeaveReviewScreen(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                  ),
+                  child: Text(
+                    "Leave an review",
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
+                ),
+              ),
+            ]),
 
             const SizedBox(height: 24),
 
@@ -184,21 +219,20 @@ class _ProductScreenState extends State<ProductScreen> {
                     ),
               ),
             ),
-            const SizedBox(height: 16),
 
             // Review list with expandable
             ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: 2,
               itemBuilder: (context, index) {
                 return Card(
-                  color: Colors.pinkAccent[50],
+                  color: Theme.of(context).colorScheme.surface,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
                   margin: const EdgeInsets.symmetric(vertical: 8),
-
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
@@ -210,7 +244,6 @@ class _ProductScreenState extends State<ProductScreen> {
                               backgroundImage: NetworkImage("A"),
                               radius: 24,
                             ),
-
                             const SizedBox(width: 16),
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,7 +260,10 @@ class _ProductScreenState extends State<ProductScreen> {
                                 Row(
                                   children: List.generate(5, (starIndex) {
                                     return Icon(
-                                      starIndex < (ratings[index]['value'] as double).round()
+                                      starIndex <
+                                              (ratings[index]['value']
+                                                      as double)
+                                                  .round()
                                           ? Icons.star
                                           : Icons.star_border,
                                       size: 20,
@@ -258,9 +294,12 @@ class _ProductScreenState extends State<ProductScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                ReviewCategory(title: 'Customer Satisfaction', rating: 4),
-                                ReviewCategory(title: 'Bang for Buck', rating: 3),
-                                ReviewCategory(title: 'Label Accuracy', rating: 4),
+                                ReviewCategory(
+                                    title: 'Customer Satisfaction', rating: 4),
+                                ReviewCategory(
+                                    title: 'Bang for Buck', rating: 3),
+                                ReviewCategory(
+                                    title: 'Label Accuracy', rating: 4),
                                 ReviewCategory(title: 'Consistency', rating: 3),
                               ],
                             ),
@@ -293,13 +332,14 @@ class ReviewCategory extends StatelessWidget {
         children: [
           Text(title),
           Row(
-            children: List.generate(5, (index) => Icon(
-              index < rating ? Icons.star : Icons.star_border,
-              color: Colors.amber,
-              size: 20,
-            )),
+            children: List.generate(
+                5,
+                (index) => Icon(
+                      index < rating ? Icons.star : Icons.star_border,
+                      color: Colors.amber,
+                      size: 20,
+                    )),
           ),
-
         ],
       ),
     );
