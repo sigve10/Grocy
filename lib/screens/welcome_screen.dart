@@ -25,28 +25,65 @@ class _WelcomePageState extends State<WelcomePage> {
   /// - If '_isRegistered' is 'false', it gives user feedback to confirm sign up via email.
   /// - If '_isRegistered' is 'true', it gives user feedback to sign in via email.
   Future<void> _handleAuth() async {
-    final action = _isRegistered ? 'Create Account' : 'Sign In';
+    final action = _isRegistered ? 'New User? Create Account' : 'Sign In';
     try {
       setState(() {
         _isLoading = true;
       });
 
+      final email = _emailController.text.trim();
+
+      // Check if the email exists in the "profiles" table
+      final response = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('email', email)
+          .maybeSingle(); // Use maybeSingle to allow for 0 or 1 result without throwing, so that rest of the response checks go through
+
+      if (response != null && _isRegistered) {
+        // Email exists and user is trying to sign up; notify to sign in instead
+        if (mounted) {
+          context.showSnackBar(
+            'This email is already registered. Please sign in instead.',
+            isError: false,
+          );
+        }
+        return; // Exit to return user to the welcome page
+      } else if (response == null && !_isRegistered) {
+        // Email does not exist and user is trying to sign in; notify to sign up
+        if (mounted) {
+          context.showSnackBar(
+            'No account found for this email. Please sign up.',
+            isError: false,
+          );
+        }
+        return; // Exit to return the user to the welcome page
+      }
+
+      // Proceed with sign-in or sign-up using Supabase's own auth
       await supabase.auth.signInWithOtp(
-        email: _emailController.text.trim(),
+        email: email,
         emailRedirectTo:
             kIsWeb ? null : 'io.supabase.flutterquickstart://login-callback/',
       );
+
       if (mounted) {
+        // Show the feedback message when a link is sent
         final message = _isRegistered
             ? 'Check your email to confirm sign up!'
             : 'Check your email for a login link!';
-        // Uses the snackbar extension previously in the main file.
         context.showSnackBar(message);
         _emailController.clear();
       }
+    } on PostgrestException catch (error) {
+      if (mounted) {
+        context.showSnackBar(
+          '$action failed: ${error.message}',
+          isError: true,
+        );
+      }
     } on AuthException catch (error) {
       if (mounted) {
-        // Uses the extension instead from the new separate file.
         context.showSnackBar('$action failed: ${error.message}', isError: true);
       }
     } catch (error) {
@@ -60,6 +97,11 @@ class _WelcomePageState extends State<WelcomePage> {
         });
       }
     }
+  }
+
+  @override
+  void initState() {
+    super.initState();
   }
 
   @override

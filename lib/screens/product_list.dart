@@ -32,25 +32,10 @@ class ProductListState extends State<ProductList> {
     // Fetch the data from the 'products' table
     final List<dynamic> data = await supabase.from('products').select();
 
-    // Print the fetched data for debugging
-    print('Fetched products: $data');
-
-    // Used for debugging while figuring out how to fetch.
-    if (data == null || data.isEmpty) {
-      print('No data fetched from Supabase.');
-    } else {
-      print('Number of products fetched: ${data.length}');
-    }
-
     // Parse the data from the database into a list of products.
     List<Product> productsFromSupabase = data
         .map((item) => Product.fromJson(item as Map<String, dynamic>))
         .toList();
-
-    // Print the parsed products
-    productsFromSupabase.forEach((product) {
-      print('Product: ${product.name}, Image URL: ${product.imageUrl}');
-    });
 
     setState(() {
       supabaseProducts = productsFromSupabase;

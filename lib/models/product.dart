@@ -13,6 +13,7 @@ class Product {
   List<Review> reviews = [];
   List<Rating> ratings = [];
 
+
   Product({
     required this.key,
     required this.name,
@@ -26,11 +27,10 @@ class Product {
   /// https://pub.dev/packages/json_serializable
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
-      key: json['key'] ?? '',
+      key: json['ean'] ?? '',
       name: json['name'] ?? '',
       description: json['description'] ?? '',
       imageUrl: json['imageurl'] as String?,
-      reviewCount: json['review_count'] ?? 0,
     );
   }
 }
