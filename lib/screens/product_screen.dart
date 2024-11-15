@@ -124,12 +124,13 @@ class _ProductScreenState extends State<ProductScreen> {
               ),
             ),
 
-            const SizedBox(height: 24),
-
+            // Ratings grid
             GridView.builder(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 2,
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 4,
+                  mainAxisSpacing: 4,
+                  childAspectRatio: 2.8
               ),
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -174,8 +175,7 @@ class _ProductScreenState extends State<ProductScreen> {
                 );
               },
             ),
-            Row(
-                children: [
+            Row(children: [
               const Spacer(),
               Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -189,7 +189,7 @@ class _ProductScreenState extends State<ProductScreen> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
+                    backgroundColor: Theme.of(context).primaryColor,
                   ),
                   child: Text(
                     "Leave an review",
@@ -210,7 +210,7 @@ class _ProductScreenState extends State<ProductScreen> {
 
             // Display Reviews Section
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Text(
                 "Reviews",
                 style: Theme.of(context).textTheme.titleMedium!.copyWith(
@@ -222,13 +222,13 @@ class _ProductScreenState extends State<ProductScreen> {
 
             // Review list with expandable
             ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+              padding:
+                  const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: 2,
               itemBuilder: (context, index) {
                 return Card(
-                  color: Theme.of(context).colorScheme.surface,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
