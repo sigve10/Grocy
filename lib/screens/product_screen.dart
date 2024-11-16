@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:grocy/models/product.dart';
+import 'package:grocy/models/rating.dart';
 
 import 'leave_review_screen.dart';
 
@@ -128,81 +129,13 @@ class _ProductScreenState extends State<ProductScreen> {
               thickness: 0.5,
             ),
 
-            // Display Ratings Section
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                "Ratings",
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
+            RatingsSection(rating: 
+              Rating(productEan: "", userEmail: "")
+                ..customerSatisfactionRating = 5
+                ..labelAccuracyRating = 4.5
+                ..priceRating = 2.5
+                ..consistencyRating = 1
             ),
-
-            // Ratings grid
-            GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 4,
-                  mainAxisSpacing: 4,
-                  childAspectRatio: 2.8
-              ),
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: ratings.length,
-              itemBuilder: (context, index) {
-                return Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Card(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Container(
-                      alignment: Alignment.center,
-                      padding: const EdgeInsets.all(4.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            ratings[index]['label'] as String,
-                            style: Theme.of(context).textTheme.bodyMedium,
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 4),
-                          _StarRatingUtil.getStarRating(ratings[index]['value'] as double),
-                        ],
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-            Row(children: [
-              const Spacer(),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const LeaveReviewScreen(),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).primaryColor,
-                  ),
-                  child: Text(
-                    "Leave an review",
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                  ),
-                ),
-              ),
-            ]),
 
             const SizedBox(height: 24),
 
@@ -231,73 +164,7 @@ class _ProductScreenState extends State<ProductScreen> {
               physics: const NeverScrollableScrollPhysics(),
               itemCount: 2,
               itemBuilder: (context, index) {
-                return Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  margin: const EdgeInsets.symmetric(vertical: 8),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const CircleAvatar(
-                              backgroundImage: NetworkImage("A"),
-                              radius: 24,
-                            ),
-                            const SizedBox(width: 16),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  "Mats Bakketeig",
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                                Text(
-                                  "Great product! I love it!",
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                                const SizedBox(height: 8),
-                                _StarRatingUtil.getStarRating(ratings[index]["value"] as double)
-                              ],
-                            ),
-                            const Spacer(),
-                            IconButton(
-                              icon: Icon(
-                                isExpanded
-                                    ? Icons.keyboard_arrow_up
-                                    : Icons.keyboard_arrow_down,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  isExpanded = !isExpanded;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                        if (isExpanded)
-                          const Padding(
-                            padding: EdgeInsets.only(top: 16.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                ReviewCategory(
-                                    title: 'Customer Satisfaction', rating: 4),
-                                ReviewCategory(
-                                    title: 'Bang for Buck', rating: 3),
-                                ReviewCategory(
-                                    title: 'Label Accuracy', rating: 4),
-                                ReviewCategory(title: 'Consistency', rating: 3),
-                              ],
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                );
+                return const Review();
               },
             )
           ],
@@ -305,6 +172,188 @@ class _ProductScreenState extends State<ProductScreen> {
       ),
     );
   }
+}
+
+class RatingsSection extends StatelessWidget {
+  final Rating rating;
+
+  const RatingsSection({super.key, required this.rating});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Ratings",
+            style: Theme.of(context).textTheme.titleMedium!.copyWith(
+              color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.bold,)
+          ),
+          const SizedBox(height: 24.0),
+          GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 4,
+              mainAxisSpacing: 4,
+              childAspectRatio: 2.8
+            ),
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: rating.displayable.length,
+            itemBuilder: (context, index) {
+              final currentRating = rating.displayable[index];
+              return Card.filled(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(currentRating["label"]),
+                    _StarRatingUtil.getStarRating(currentRating["value"] as double)
+                  ],
+                )
+              );
+            }
+          ),
+          const SizedBox(height: 16.0),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              FilledButton(
+                onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const LeaveReviewScreen(),
+                      ),
+                    );
+                },
+                child: const Text("Leave a Review"),
+              ),
+            ],
+          )
+        ],
+      )
+    );
+  }
+}
+
+class Review extends StatefulWidget {
+  const Review({super.key});
+
+  @override
+  State<StatefulWidget> createState() => ReviewState();
+}
+
+
+
+class ReviewState extends State<Review> {
+  static const maxReviewLines = 2;
+
+  final String reviewerName = "Mats Bakketeig";
+  final String reviewContent = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur malesuada, lacus scelerisque dapibus consequat, metus dolor euismod elit, vitae auctor massa urna eu urna. Proin porttitor feugiat rhoncus. Aliquam et erat sed est molestie porttitor suscipit quis lorem. Proin aliquet pharetra urna in sodales. Aenean eget ornare leo. Praesent non sapien porttitor lorem imperdiet bibendum. Morbi leo quam, venenatis vitae justo id, malesuada sollicitudin elit. Maecenas accumsan elit sit amet ligula tristique, quis feugiat sem consectetur. Nulla id ex ante. Sed condimentum diam scelerisque, interdum erat eu, tempor mauris.";
+  final String reviewPfp = "";
+  final Rating rating = Rating(
+    productEan: "",
+    userEmail: ""
+  )
+    ..customerSatisfactionRating = 5
+    ..labelAccuracyRating = 4.5
+    ..priceRating = 3.5
+    ..consistencyRating = 1;
+
+  bool isExpanded = false;
+  bool isOverflowing = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card.outlined(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const CircleAvatar(child: Icon(Icons.account_circle)),
+                const SizedBox(width: 24),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(reviewerName, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      // This allows us to check if the review exceeds X lines
+                      LayoutBuilder(builder: (context, constraints) {
+                        final textPaint = TextPainter(
+                          text: TextSpan(
+                            text: reviewContent
+                          ),
+                          maxLines: maxReviewLines,
+                          textDirection: TextDirection.ltr
+                        )..layout(maxWidth: constraints.maxWidth);
+
+                        isOverflowing = textPaint.didExceedMaxLines;
+
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              reviewContent,
+                              maxLines: isExpanded ? null : maxReviewLines,
+                              overflow: isExpanded
+                                ? TextOverflow.visible
+                                : TextOverflow.ellipsis
+                            ),
+                          ]
+                        );
+                      })
+                    ],
+                  )
+                )
+              ],
+            ),
+            if (isExpanded)
+              const SizedBox(height: 8.0),
+            if (isExpanded)
+              GridView.builder(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 4,
+                  mainAxisSpacing: 4,
+                  childAspectRatio: 2.8
+                ),
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: rating.displayable.length,
+                itemBuilder: (context, index) {
+                  final currentRating = rating.displayable[index];
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(currentRating["label"]),
+                      _StarRatingUtil.getStarRating(currentRating["value"] as double)
+                    ],
+                  );
+                }
+              ),
+            Row(
+              children: [
+                if (!isExpanded)
+                  _StarRatingUtil.getStarRating(rating.averageRating),
+                const Spacer(),
+                TextButton(
+                  onPressed: () => setState(() => isExpanded = !isExpanded),
+                  child: Text(isExpanded ? "Show less" : "Show more")
+                )
+              ],
+            )
+          ]
+        ),
+      )
+    );
+  }
+
 }
 
 class ReviewCategory extends StatelessWidget {
