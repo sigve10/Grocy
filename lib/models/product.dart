@@ -9,7 +9,7 @@ class Product {
   /// An image url for the product image
   final String imageUrl;
   /// The primary tag of the product. Should be one of the basic tags.
-  final String primaryTag;
+  final String? primaryTag;
   /// A list of secondary tags for the product, such as user-generated tags.
   final List<String> tags = [];
 
@@ -20,4 +20,14 @@ class Product {
     required this.imageUrl,
     required this.primaryTag
   });
+
+  factory Product.fromJson(Map<String, dynamic> json) {
+    return Product(
+      ean: json['ean'] ?? '',
+      name: json['name'] ?? '',
+      description: json['description'],
+      imageUrl: json['image'] ?? '',
+      primaryTag: json['primaryTag']
+    );
+  }
 }

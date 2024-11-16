@@ -1,7 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:grocy/screens/product_screen.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../models/product.dart';
 
 class BarcodeScanScreen extends StatefulWidget {
   const BarcodeScanScreen({super.key});
@@ -19,13 +24,35 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> with WidgetsBindi
   Barcode? _barcode;
   StreamSubscription<Object?>? _subscription;
 
+  final supabase = Supabase.instance.client;
+
   void _handleBarcode(BarcodeCapture barcode) {
     if (mounted) {
       print('Barcode detected: ${barcode.barcodes.firstOrNull}');
       setState(() {
         _barcode = barcode.barcodes.firstOrNull;
       });
+        if (_barcode != null) fetchProduct(_barcode!.displayValue!);
     }
+  }
+
+  Future<void> fetchProduct(String barcode) async {
+      print("Fetching product with barcode: $barcode");
+      final res = await supabase.functions.invoke("fetch-product", body: {"ean": barcode}, headers: {"Content-Type": "application/json"}, method: HttpMethod.post);
+
+      print(res.data); //temp logging
+
+      if (res.status == 200) {
+        final productJson = res.data as Map<String, dynamic>;
+        Product product = Product.fromJson(productJson);
+
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductScreen(product: product),
+          ),
+        );
+      }
   }
 
   Widget _buildBarcode(Barcode? barcode) {
@@ -78,6 +105,7 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> with WidgetsBindi
 
   @override
   Widget build(BuildContext context) {
+    fetchProduct("barcode");
     return Stack(children: [
       MobileScanner(
         fit: BoxFit.contain,
