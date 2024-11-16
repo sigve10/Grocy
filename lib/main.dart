@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:grocy/screens/tabs_container_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:grocy/screens/welcome_screen.dart';
-import 'package:grocy/screens/account_screen.dart';
 // Supabase redirects do not work with the default URL for flutter, so use this:
 // https://docs.flutter.dev/ui/navigation/url-strategies
 import 'package:flutter_web_plugins/url_strategy.dart';

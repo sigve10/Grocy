@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:grocy/extentions/snackbar_context.dart';
 
 class CreateProductScreen extends StatefulWidget {
   const CreateProductScreen({super.key});

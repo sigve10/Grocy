@@ -1,5 +1,3 @@
-import 'package:grocy/models/tag.dart';
-
 /// Represents a product you can buy off of store shelves
 class Product {
   /// The barcode of the product (PK)
