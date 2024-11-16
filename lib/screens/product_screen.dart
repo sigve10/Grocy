@@ -17,6 +17,33 @@ class ProductScreen extends StatefulWidget {
   State<ProductScreen> createState() => _ProductScreenState();
 }
 
+class _StarRatingUtil {
+  static Widget getStarRating(double stars) {
+    const double starSize = 20;
+    const Color starColor = Colors.amber;
+
+    const Icon fullStar = Icon(Icons.star, size: starSize, color: starColor);
+    const Icon halfStar = Icon(Icons.star_half, size: starSize, color: starColor);
+    const Icon noStar = Icon(Icons.star_border, size: starSize, color: starColor);
+
+    int fullStars = stars.floor();
+    bool hasHalfStar = stars - (fullStars as double) >= 0.5;
+    int noStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        for (int i = 0; i < fullStars; i++)
+          fullStar,
+        if (hasHalfStar)
+          halfStar,
+        for (int i = 0; i < noStars; i++)
+          noStar
+      ]
+    );
+  }
+}
+
 class _ProductScreenState extends State<ProductScreen> {
   List<Product> filteredProducts = [];
   late _Rating productRating;
@@ -29,7 +56,7 @@ class _ProductScreenState extends State<ProductScreen> {
     productRating = _Rating(
       customerSatisfaction: 4.5,
       labelAccuracy: 4.0,
-      bangForBuck: 4.2,
+      bangForBuck: 2.5,
       consistency: 1,
     );
   }
@@ -143,20 +170,7 @@ class _ProductScreenState extends State<ProductScreen> {
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 4),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: List.generate(5, (starIndex) {
-                              return Icon(
-                                starIndex <
-                                        (ratings[index]['value'] as double)
-                                            .round()
-                                    ? Icons.star
-                                    : Icons.star_border,
-                                size: 10,
-                                color: Colors.amber,
-                              );
-                            }),
-                          ),
+                          _StarRatingUtil.getStarRating(ratings[index]['value'] as double),
                         ],
                       ),
                     ),
@@ -246,20 +260,7 @@ class _ProductScreenState extends State<ProductScreen> {
                                   style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                                 const SizedBox(height: 8),
-                                Row(
-                                  children: List.generate(5, (starIndex) {
-                                    return Icon(
-                                      starIndex <
-                                              (ratings[index]['value']
-                                                      as double)
-                                                  .round()
-                                          ? Icons.star
-                                          : Icons.star_border,
-                                      size: 20,
-                                      color: Colors.amber,
-                                    );
-                                  }),
-                                ),
+                                _StarRatingUtil.getStarRating(ratings[index]["value"] as double)
                               ],
                             ),
                             const Spacer(),
@@ -308,7 +309,7 @@ class _ProductScreenState extends State<ProductScreen> {
 
 class ReviewCategory extends StatelessWidget {
   final String title;
-  final int rating;
+  final double rating;
 
   const ReviewCategory({super.key, required this.title, required this.rating});
 
@@ -320,15 +321,7 @@ class ReviewCategory extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(title),
-          Row(
-            children: List.generate(
-                5,
-                (index) => Icon(
-                      index < rating ? Icons.star : Icons.star_border,
-                      color: Colors.amber,
-                      size: 20,
-                    )),
-          ),
+          _StarRatingUtil.getStarRating(rating)
         ],
       ),
     );
