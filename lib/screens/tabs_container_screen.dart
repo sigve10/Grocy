@@ -15,21 +15,27 @@ class _TabsContainerScreenState extends State<TabsContainerScreen> {
   // Home page
   int _selectedPageIndex = 1;
 
-  Widget getActivePage() {
-    switch (_selectedPageIndex) {
-      case 0:
-        // Scan barcode screen
-        return BarcodeScanScreen();
-      case 1:
-        // Product-list Screen
-        return ProductList();
-      case 2:
-        // Wishlist Screen
-        return const Column();
-    }
+  final Map<int, Widget> pages = {
+    0: const BarcodeScanScreen(),
+    1: const ProductList(),
+    2: const Column()
+  };
 
-    // Error screen, perchance?
-    return const Column();
+  final Map<int, GlobalKey<NavigatorState>> navKeys = {
+    0: GlobalKey<NavigatorState>(),
+    1: GlobalKey<NavigatorState>(),
+    2: GlobalKey<NavigatorState>()
+  };
+
+  Widget getActivePage() {
+    return Navigator(
+      key: navKeys[_selectedPageIndex],
+      onGenerateRoute: (settings) {
+        return MaterialPageRoute(
+          builder: (_) => pages[_selectedPageIndex] ?? const Column()
+        );
+      },
+    );
   }
 
   void _setScreen(int index) {
@@ -41,7 +47,13 @@ class _TabsContainerScreenState extends State<TabsContainerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: getActivePage(),
+      body: Navigator(
+        onGenerateRoute: (settings) {
+          return MaterialPageRoute(
+            builder: (_) => getActivePage()
+          );
+        },
+      ),
       bottomNavigationBar: BottomNavigationBar(
         onTap: _setScreen,
         currentIndex: _selectedPageIndex,

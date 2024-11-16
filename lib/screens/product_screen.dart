@@ -56,25 +56,14 @@ class _ProductScreenState extends State<ProductScreen> {
     ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: TextField(
-          decoration: InputDecoration(
-            hintText: "Search products...",
-            prefixIcon: const Icon(Icons.search),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-          onChanged: _filterProducts,
-        ),
-      ),
+      appBar: AppBar(),
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Display product image
             Image.network(
-              widget.product.imageUrl ?? '',
+              widget.product.imageUrl,
               height: 300,
               width: double.infinity,
               fit: BoxFit.cover,
