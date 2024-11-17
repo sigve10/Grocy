@@ -1,15 +1,11 @@
 /// Implement user model class
 class User {
-  String key;
-  String name;
-  String email;
+  final String email;
+  final String nickname;
 
   /// User constructor
-  User(
-    this.key,
-    {
-      required this.name,
-      required this.email,
-    }
-  );
+  User({
+    required this.email,
+    required this.nickname
+  });
 }

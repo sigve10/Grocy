@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:grocy/main.dart';
+import 'package:grocy/widget/search_widget.dart';
 import '../data/dummy_data.dart';
 import '../models/product.dart';
+import '../screens/account_screen.dart';
 import 'product_screen.dart';
+
 
 class ProductList extends StatefulWidget {
   const ProductList({super.key});
@@ -65,22 +68,9 @@ class ProductListState extends State<ProductList> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: "Search products...",
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              onChanged: _filterProducts,
-            ),
-          ),
+          const SearchWidget(),
           Expanded(
             child: ListView.builder(
               itemCount: filteredProducts.length,
@@ -100,11 +90,14 @@ class ProductListState extends State<ProductList> {
                         vertical: 8.0, horizontal: 16.0),
                     padding: const EdgeInsets.all(12.0),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surface,
                       borderRadius: BorderRadius.circular(10.0),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.grey.withOpacity(0.2),
+                          color: Theme.of(context)
+                              .colorScheme
+                              .primary
+                              .withOpacity(0.1),
                           spreadRadius: 1,
                           blurRadius: 5,
                           offset: const Offset(0, 3),
@@ -117,15 +110,17 @@ class ProductListState extends State<ProductList> {
                         ClipRRect(
                           borderRadius: BorderRadius.circular(8.0),
                           child: Image.network(
-                            product.imageUrl ?? '',
+                            product.imageUrl,
                             width: 60,
                             height: 60,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                const Icon(
+                            errorBuilder: (context, error, stackTrace) => Icon(
                               Icons.broken_image,
                               size: 50,
-                              color: Colors.grey,
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withOpacity(0.6),
                             ),
                           ),
                         ),
@@ -144,12 +139,20 @@ class ProductListState extends State<ProductList> {
                               const SizedBox(height: 4.0),
                               Row(
                                 children: [
-                                  Icon(Icons.star,
-                                      size: 16, color: Colors.yellow[700]),
+                                  const Icon(Icons.star,
+                                      size: 16, color: Colors.amber),
                                   Text(
-                                    " ${product.reviewCount} reviews",
-                                    style: TextStyle(color: Colors.grey[600]),
-                                  ),
+                                    "50 reviews",
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withOpacity(0.6),
+                                        ),
+                                  )
                                 ],
                               ),
                             ],
