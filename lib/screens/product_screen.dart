@@ -179,6 +179,26 @@ class RatingsSection extends StatelessWidget {
 
   const RatingsSection({super.key, required this.rating});
 
+  List<Widget> createRatings() {
+    final List<Widget> retval = [];
+
+    for (Map<String, dynamic> currentRating in rating.displayable) {
+      retval.add(
+        Card.filled(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(currentRating["label"], textAlign: TextAlign.center,),
+              _StarRatingUtil.getStarRating(currentRating["value"] as double)
+            ],
+          )
+        )
+      );
+    }
+
+    return retval;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -193,28 +213,16 @@ class RatingsSection extends StatelessWidget {
               fontWeight: FontWeight.bold,)
           ),
           const SizedBox(height: 24.0),
-          GridView.builder(
+          GridView(
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               crossAxisSpacing: 4,
               mainAxisSpacing: 4,
-              childAspectRatio: 2.8
+              // Why are flutter grid this awful?
+              mainAxisExtent: 94
             ),
             shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: rating.displayable.length,
-            itemBuilder: (context, index) {
-              final currentRating = rating.displayable[index];
-              return Card.filled(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(currentRating["label"]),
-                    _StarRatingUtil.getStarRating(currentRating["value"] as double)
-                  ],
-                )
-              );
-            }
+            children: createRatings()
           ),
           const SizedBox(height: 16.0),
           Row(
