@@ -94,7 +94,7 @@ class _ProductScreenState extends State<ProductScreen> {
               widget.product.imageUrl,
               height: 300,
               width: double.infinity,
-              fit: BoxFit.cover,
+              fit: BoxFit.contain,
               errorBuilder: (context, error, stackTrace) => const Icon(
                 Icons.broken_image,
                 size: 100,
