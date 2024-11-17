@@ -45,10 +45,7 @@ class ProductListState extends State<ProductList> {
       filteredProducts = supabaseProducts;
       isLoading = false;
     });
-  } catch (error, stackTrace) {
-    // Very default prints for debugging
-    print('Error fetching products: $error');
-    print('Stack trace: $stackTrace');
+  } catch (error) {
     setState(() {
       isLoading = false;
     });
