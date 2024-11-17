@@ -26,7 +26,7 @@ class Product {
       ean: json['ean'] ?? '',
       name: json['name'] ?? '',
       description: json['description'],
-      imageUrl: json['image'] ?? '',
+      imageUrl: json['imageurl'] ?? '',
       primaryTag: json['primaryTag']
     );
   }
