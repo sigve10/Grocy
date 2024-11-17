@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:grocy/screens/welcome_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:grocy/styling/button_styles.dart';
 import 'package:grocy/extentions/snackbar_context.dart';
 import 'package:grocy/main.dart';
 
@@ -19,8 +20,6 @@ class AccountPage extends StatefulWidget {
 /// Manages the state of user interactions and data.
 class _AccountPageState extends State<AccountPage> {
   final _usernameController = TextEditingController();
-  final _fullNameController =
-      TextEditingController(); // Controller for full name
   final _emailController = TextEditingController(); // Controller for email
   var _loading = true;
 
@@ -55,8 +54,6 @@ class _AccountPageState extends State<AccountPage> {
       print('Fetched Profile Data: $data');
 
       _usernameController.text = data['username'] ?? '';
-      _fullNameController.text =
-          data['full_name'] ?? ''; //If we want full name 🤷‍♀️
       _emailController.text = data['email'] ?? '';
 
       // Debugging print
@@ -80,6 +77,7 @@ class _AccountPageState extends State<AccountPage> {
       }
     }
   }
+  
 
   @override
   void initState() {
@@ -90,49 +88,67 @@ class _AccountPageState extends State<AccountPage> {
   @override
   void dispose() {
     _usernameController.dispose();
-    _fullNameController.dispose();
     _emailController.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    // Debug for the ui not updating
-    print('Rebuilding UI');
-    return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    // Same as the welcome_screen.
+      appBar: AppBar(
+        title: const Padding(
+          padding: EdgeInsets.only(top: 20),
+          child: Text(
+            // TBD: name
+            'My Account',
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+        centerTitle: true,
+        toolbarHeight: 80,
+      ),
+    body: Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          TextFormField(
-            controller: _usernameController,
-            decoration: const InputDecoration(labelText: 'User Name'),
+          SizedBox(
+            width: 350,
+            child: TextFormField(
+              controller: _usernameController,
+              decoration: const InputDecoration(labelText: 'User Name'),
+            ),
           ),
           const SizedBox(height: 18),
-          TextFormField(
-            controller: _fullNameController,
-            decoration: const InputDecoration(labelText: 'Full Name'),
+          SizedBox(
+            width: 350,
+            child: TextFormField(
+              controller: _emailController,
+              decoration: const InputDecoration(labelText: 'Email'),
+              readOnly: true,
+            ),
           ),
-          const SizedBox(height: 18),
-          TextFormField(
-            controller: _emailController,
-            decoration: const InputDecoration(labelText: 'Email'),
-            readOnly: true,
-          ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 26),
           ElevatedButton(
+            style: ButtonStyles.filled,
             onPressed: _loading ? null : _updateProfile,
             child: Text(_loading ? 'Saving...' : 'Update'),
           ),
           const SizedBox(height: 18),
-          TextButton(
+          OutlinedButton(
+            style: ButtonStyles.outlined,
             onPressed: _signOut,
             child: const Text('Sign Out'),
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   /// Called when user taps `Update` button
   /// Updates the user's profile in the database.
@@ -142,13 +158,11 @@ class _AccountPageState extends State<AccountPage> {
     });
 
     final userName = _usernameController.text.trim();
-    final fullName = _fullNameController.text.trim(); // Get full_name value
     final user = supabase.auth.currentUser;
 
     final updates = {
       'id': user!.id,
       'username': userName,
-      'full_name': fullName,
       'updated_at': DateTime.now().toIso8601String(),
     };
 
