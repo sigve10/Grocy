@@ -221,6 +221,7 @@ class RatingsSection extends StatelessWidget {
               // Why are flutter grid this awful?
               mainAxisExtent: 94
             ),
+            physics: const NeverScrollableScrollPhysics(),
             shrinkWrap: true,
             children: createRatings()
           ),
