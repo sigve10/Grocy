@@ -38,28 +38,7 @@ class ProductListState extends State<ProductList> {
     return Scaffold(
       body: Column(
         children: [
-          Row(
-            children: [
-              const Expanded(
-                child: SearchWidget(),
-              ),
-              IconButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    //TODO: after merge, fix session checks so that if you are ot logged in, you are sent to welcome screen
-                    //TODO: fix navigating back to home from account page, other than the "back" arrow. Home button should navigate you back
-                    MaterialPageRoute(builder: (context) => const AccountPage()),
-                  );
-                },
-                //TODO: FIX COLORS OF THIS.
-                icon: const Icon(Icons.person),
-                tooltip: "Account Page",
-                iconSize: 24,
-              ),
-              const SizedBox(width: 22), // spacing between icon and right edge
-            ],
-          ),
+          const SearchWidget(),
           Expanded(
             child: ListView.builder(
               itemCount: filteredProducts.length,

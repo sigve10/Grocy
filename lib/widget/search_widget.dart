@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:grocy/data/dummy_data.dart';
 import 'package:grocy/models/tag.dart';
+import 'package:grocy/screens/account_screen.dart';
 
 class SearchWidget extends ConsumerStatefulWidget {
   const SearchWidget({super.key});
@@ -19,6 +20,20 @@ class SearchWidgetState extends ConsumerState<SearchWidget> {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: ExpansionTile(
+        controlAffinity: ListTileControlAffinity.leading,
+        trailing: IconButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              //TODO: after merge, fix session checks so that if you are ot logged in, you are sent to welcome screen
+              //TODO: fix navigating back to home from account page, other than the "back" arrow. Home button should navigate you back
+              MaterialPageRoute(builder: (context) => const AccountPage()),
+            );
+          },
+          icon: const Icon(Icons.person),
+          tooltip: "Account Page",
+          iconSize: 24,
+        ),
         title: TextField(
           decoration: InputDecoration(
             hintText: "Search products...",
@@ -102,9 +117,6 @@ class _SearchWidgetUserTagsState extends State<_SearchWidgetUserTags> {
           optionsBuilder: getTagsBySearch,
           displayStringForOption: (Tag option) => option.name,
         ),
-        Wrap(
-
-        )
       ]
     );
   }
