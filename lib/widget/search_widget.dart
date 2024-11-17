@@ -78,7 +78,7 @@ class _SearchWidgetMainTagsState extends ConsumerState<_SearchWidgetMainTags> {
     return Wrap(
       direction: Axis.horizontal,
       spacing: 4.0,
-      runSpacing: 0.0,
+      runSpacing: 4.0,
       alignment: WrapAlignment.center,
       children: [
         for (Tag primaryTag in primaryTags)
@@ -99,7 +99,20 @@ class _SearchWidgetUserTags extends StatefulWidget {
 }
 
 class _SearchWidgetUserTagsState extends State<_SearchWidgetUserTags> {
-  String tagSearch = "";
+  TextEditingController tagSearchController = TextEditingController();
+  final Set<String> selectedUserTags = {};
+
+  void addUserTag(String tag) {
+    setState(() {
+      selectedUserTags.add(tag);
+      tagSearchController.text = "";
+    });
+  }
+
+  void removeUserTag(String tag) {
+    setState(() => selectedUserTags.remove(tag));
+  }
+
   Iterable<Tag> getTagsBySearch (TextEditingValue search) {
     if (search.text == "") {
       return const Iterable<Tag>.empty();
@@ -111,13 +124,57 @@ class _SearchWidgetUserTagsState extends State<_SearchWidgetUserTags> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Autocomplete<Tag>(
-          optionsBuilder: getTagsBySearch,
-          displayStringForOption: (Tag option) => option.name,
-        ),
-      ]
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+      child: Column(
+        children: [
+          Autocomplete<Tag>(
+            optionsBuilder: getTagsBySearch,
+            displayStringForOption: (Tag option) => option.name,
+            onSelected: (tag) => addUserTag(tag.name),
+            fieldViewBuilder: (context, controller, focus, submitted) {
+              tagSearchController = controller;
+              return TextField(
+                focusNode: focus,
+                controller: tagSearchController,
+                decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.tag),
+                  border: OutlineInputBorder(),
+                  hintText: "Find tags..."
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 16.0),
+          Wrap(
+            spacing: 4.0,
+            runSpacing: 4.0,
+            alignment: WrapAlignment.center,
+            direction: Axis.horizontal,
+            children: [
+              for (String tag in selectedUserTags)
+                Chip(
+                  label: RichText(
+                    text: TextSpan(
+                      children: [
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.middle,
+                          child: Icon(
+                            Icons.tag,
+                            size: 20,
+                            color: Theme.of(context).colorScheme.onSurface.withAlpha(128)
+                          )
+                        ),
+                        TextSpan(text: tag)
+                      ]
+                    )
+                  ),
+                  onDeleted: () => removeUserTag(tag),
+                )
+            ]
+          )
+        ]
+      ),
     );
   }
 
