@@ -15,8 +15,8 @@ class BarcodeScanScreen extends StatefulWidget {
   State<BarcodeScanScreen> createState() => _BarcodeScanScreenState();
 }
 
-class _BarcodeScanScreenState extends State<BarcodeScanScreen> with WidgetsBindingObserver {
-
+class _BarcodeScanScreenState extends State<BarcodeScanScreen>
+    with WidgetsBindingObserver {
   final MobileScannerController controller = MobileScannerController(
     formats: const [BarcodeFormat.all],
     autoStart: true,
@@ -28,44 +28,54 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> with WidgetsBindi
 
   void _handleBarcode(BarcodeCapture barcode) {
     if (mounted) {
-      print('Barcode detected: ${barcode.barcodes.firstOrNull}');
-      setState(() {
-        _barcode = barcode.barcodes.firstOrNull;
-      });
-        if (_barcode != null) fetchProduct(_barcode!.displayValue!);
+      final detectedBarcode = barcode.barcodes.firstOrNull;
+
+      print('Barcode detected: $detectedBarcode');
+
+      if (detectedBarcode != null && detectedBarcode.displayValue != null) {
+        setState(() {
+          _barcode = barcode.barcodes.firstOrNull;
+        });
+
+        controller.stop();
+
+        fetchProduct(detectedBarcode.displayValue!);
+      }
     }
   }
 
   Future<void> fetchProduct(String barcode) async {
-      print("Fetching product with barcode: $barcode");
-      final res = await supabase.functions.invoke("fetch-product", body: {"ean": barcode}, headers: {"Content-Type": "application/json"}, method: HttpMethod.post);
+    print("Fetching product with barcode: $barcode");
+    final res = await supabase.functions.invoke("fetch-product",
+        body: {"ean": barcode},
+        headers: {"Content-Type": "application/json"},
+        method: HttpMethod.post);
 
-      print(res.data); //temp logging
+    print(res.data); //temp logging
 
-      if (res.status == 200) {
-        final productJson = res.data as Map<String, dynamic>;
-        Product product = Product.fromJson(productJson);
+    if (res.status == 200 && res.data != null) {
+      final productJson = res.data as Map<String, dynamic>;
+      Product product = Product.fromJson(productJson);
 
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ProductScreen(product: product),
-          ),
-        );
+      if (product.ean.isEmpty) {
+        print("Product not found");
+        return;
       }
+
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ProductScreen(product: product),
+        ),
+      );
+
+      if (mounted) await controller.start();
+    }
   }
 
   Widget _buildBarcode(Barcode? barcode) {
-    if (barcode == null) {
-      return const Text(
-        'Scan something!',
-        overflow: TextOverflow.fade,
-        style: TextStyle(color: Colors.white),
-      );
-    }
-
     return Text(
-      barcode.displayValue ?? 'No display value.',
+      barcode?.displayValue ?? 'Scan something',
       overflow: TextOverflow.fade,
       style: const TextStyle(color: Colors.white),
     );
@@ -83,29 +93,25 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen> with WidgetsBindi
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (!controller.value.hasCameraPermission) {
-      return;
-    }
-
     switch (state) {
-      case AppLifecycleState.detached:
-      case AppLifecycleState.hidden:
       case AppLifecycleState.paused:
-        return;
-      case AppLifecycleState.resumed:
-        _subscription = controller.barcodes.listen(_handleBarcode);
-
-        unawaited(controller.start());
-      case AppLifecycleState.inactive:
         unawaited(_subscription?.cancel());
         _subscription = null;
         unawaited(controller.stop());
+        break;
+      case AppLifecycleState.resumed:
+        if (controller.value.isRunning == false) {
+          _subscription = controller.barcodes.listen(_handleBarcode);
+          unawaited(controller.start());
+        }
+        break;
+      default:
+        break;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    fetchProduct("barcode");
     return Stack(children: [
       MobileScanner(
         fit: BoxFit.contain,
