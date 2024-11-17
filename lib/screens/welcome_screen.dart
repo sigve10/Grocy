@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:grocy/main.dart';
+import 'account_screen.dart';
 import 'package:grocy/extentions/snackbar_context.dart';
+import 'package:grocy/styling/button_styles.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// The welcome page that user lands on if they're not already signed in.
@@ -19,6 +21,8 @@ class _WelcomePageState extends State<WelcomePage> {
   final TextEditingController _emailController = TextEditingController();
   bool _isLoading = false;
   bool _isRegistered = false; // Tracks whether the user is already registered.
+  late final StreamSubscription<AuthState> _authStateSubscription;
+  
 
   /// Handles user authentication via Supabase's magic link.
   ///
@@ -99,22 +103,46 @@ class _WelcomePageState extends State<WelcomePage> {
     }
   }
 
+@override
+void initState() {
+  super.initState();
+
+  // Check for existing session
+  final session = supabase.auth.currentSession;
+  if (session != null) {
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => const AccountPage()),
+    );
+  }
+
+  // Listen for authentication state changes
+  _authStateSubscription = supabase.auth.onAuthStateChange.listen(
+    (data) {
+      final session = data.session;
+      if (session != null) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const AccountPage()),
+        );
+      }
+    },
+    onError: (error) {
+      if (mounted) {
+        context.showSnackBar('Error: ${error.toString()}', isError: true);
+      }
+    },
+  );
+}
+
+
   @override
-  void initState() {
-    super.initState();
+  void dispose() {
+    _emailController.dispose();
+    _authStateSubscription.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final ButtonStyle buttonStyle = ElevatedButton.styleFrom(
-      minimumSize: const Size(200, 60),
-      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-      textStyle: const TextStyle(fontSize: 20),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
-    );
-
     return Scaffold(
       appBar: AppBar(
         title: const Padding(
@@ -152,12 +180,12 @@ class _WelcomePageState extends State<WelcomePage> {
             ),
             const SizedBox(height: 26),
             ElevatedButton(
-              style: buttonStyle,
+              style: ButtonStyles.filled,
               onPressed: _isLoading ? null : _handleAuth,
               child: Text(
                 _isLoading
                     ? 'Please wait...'
-                    : (_isRegistered ? 'Sign Up' : 'Sign In'),
+                    : (_isRegistered ? 'Create an account' : 'Sign in'),
               ),
             ),
             // My magnificent solution for margin / gap.
@@ -165,7 +193,7 @@ class _WelcomePageState extends State<WelcomePage> {
             const Text('Or'),
             const SizedBox(height: 15),
             ElevatedButton(
-              style: buttonStyle,
+              style: ButtonStyles.filled,
               onPressed: () {
                 setState(() {
                   _isRegistered = !_isRegistered;
@@ -173,7 +201,7 @@ class _WelcomePageState extends State<WelcomePage> {
                 });
               },
               child: Text(
-                _isRegistered ? 'Back to Sign In' : 'Sign Up',
+                _isRegistered ? 'Back to Sign In' : 'Create an account',
                 style: const TextStyle(fontSize: 18),
               ),
             ),
@@ -181,11 +209,5 @@ class _WelcomePageState extends State<WelcomePage> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    super.dispose();
   }
 }
