@@ -22,117 +22,107 @@ class _WelcomePageState extends State<WelcomePage> {
   bool _isLoading = false;
   bool _isRegistered = false; // Tracks whether the user is already registered.
   late final StreamSubscription<AuthState> _authStateSubscription;
-  
 
   /// Handles user authentication via Supabase's magic link.
   ///
   /// - If '_isRegistered' is 'false', it gives user feedback to confirm sign up via email.
   /// - If '_isRegistered' is 'true', it gives user feedback to sign in via email.
-  Future<void> _handleAuth() async {
-    final action = _isRegistered ? 'New User? Create Account' : 'Sign In';
-    try {
-      setState(() {
-        _isLoading = true;
-      });
+Future<void> _handleAuth() async {
+  final action = _isRegistered ? 'New User? Create Account' : 'Sign In';
 
-      final email = _emailController.text.trim();
+  setState(() {
+    _isLoading = true;
+  });
 
-      // Check if the email exists in the "profiles" table
-      final response = await supabase
-          .from('profiles')
-          .select('email')
-          .eq('email', email)
-          .maybeSingle(); // Use maybeSingle to allow for 0 or 1 result without throwing, so that rest of the response checks go through
+  final email = _emailController.text.trim();
+  // Because the message should never be null, I am not using String? here.
+  String message = '';
 
-      if (response != null && _isRegistered) {
-        // Email exists and user is trying to sign up; notify to sign in instead
-        if (mounted) {
-          context.showSnackBar(
-            'This email is already registered. Please sign in instead.',
-            isError: false,
-          );
-        }
-        return; // Exit to return user to the welcome page
-      } else if (response == null && !_isRegistered) {
-        // Email does not exist and user is trying to sign in; notify to sign up
-        if (mounted) {
-          context.showSnackBar(
-            'No account found for this email. Please sign up.',
-            isError: false,
-          );
-        }
-        return; // Exit to return the user to the welcome page
-      }
+  try {
+    // Check if the email exists in the "profiles" table
+    final response = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('email', email)
+        .maybeSingle();
 
-      // Proceed with sign-in or sign-up using Supabase's own auth
-      await supabase.auth.signInWithOtp(
-        email: email,
-        emailRedirectTo:
-            kIsWeb ? null : 'io.supabase.flutterquickstart://login-callback/',
-      );
-
-      if (mounted) {
-        // Show the feedback message when a link is sent
-        final message = _isRegistered
+    if (response != null && _isRegistered) {
+      message = 'This email is already registered. Please sign in instead.';
+    } else if (response == null && !_isRegistered) {
+      message = 'No account found for this email. Please sign up.';
+    } else {
+      try {
+        await supabase.auth.signInWithOtp(
+          email: email,
+          emailRedirectTo:
+              kIsWeb ? null : 'io.supabase.flutterquickstart://login-callback/',
+        );
+        message = _isRegistered
             ? 'Check your email to confirm sign up!'
             : 'Check your email for a login link!';
-        context.showSnackBar(message);
         _emailController.clear();
-      }
-    } on PostgrestException catch (error) {
-      if (mounted) {
-        context.showSnackBar(
-          '$action failed: ${error.message}',
-          isError: true,
-        );
-      }
-    } on AuthException catch (error) {
-      if (mounted) {
-        context.showSnackBar('$action failed: ${error.message}', isError: true);
-      }
-    } catch (error) {
-      if (mounted) {
-        context.showSnackBar('Unexpected error during $action', isError: true);
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+      } on AuthException catch (error) {
+        message = '$action failed: ${error.message}';
       }
     }
+
+    if (mounted) {
+      context.showSnackBar(message, isError: message.startsWith('$action failed'));
+    }
+  } on PostgrestException catch (error) {
+    if (mounted) {
+      context.showSnackBar('$action failed: ${error.message}', isError: true);
+    }
+  } catch (error) {
+    if (mounted) {
+      context.showSnackBar('Unexpected error during $action', isError: true);
+    }
+  } finally {
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
-
-@override
-void initState() {
-  super.initState();
-
-  // Check for existing session
-  final session = supabase.auth.currentSession;
-  if (session != null) {
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const AccountPage()),
-    );
-  }
-
-  // Listen for authentication state changes
-  _authStateSubscription = supabase.auth.onAuthStateChange.listen(
-    (data) {
-      final session = data.session;
-      if (session != null) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const AccountPage()),
-        );
-      }
-    },
-    onError: (error) {
-      if (mounted) {
-        context.showSnackBar('Error: ${error.toString()}', isError: true);
-      }
-    },
-  );
 }
 
+
+
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Check for an existing session, to prevent Flutter from trying to replace WelcomePage with AccountPage
+    // while WelcomePage is being set up in initstate.
+    final session = supabase.auth.currentSession;
+    if (session != null) {
+      Future.microtask(() {
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const AccountPage()),
+          );
+        }
+      });
+    }
+
+    // Listen for authentication state changes (from Supabase's own project)
+    _authStateSubscription = supabase.auth.onAuthStateChange.listen(
+      (data) {
+        final session = data.session;
+        if (session != null && mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const AccountPage()),
+          );
+        }
+      },
+      onError: (error) {
+        if (mounted) {
+          context.showSnackBar('Error: ${error.toString()}', isError: true);
+        }
+      },
+    );
+  }
 
   @override
   void dispose() {
