@@ -5,7 +5,9 @@ import 'package:grocy/models/tag.dart';
 import 'package:grocy/screens/account_screen.dart';
 
 class SearchWidget extends ConsumerStatefulWidget {
-  const SearchWidget({super.key});
+  final ValueChanged<String> onQuery;
+
+  const SearchWidget({super.key, required this.onQuery});
 
   @override
   ConsumerState<ConsumerStatefulWidget> createState() {
@@ -14,7 +16,6 @@ class SearchWidget extends ConsumerStatefulWidget {
 }
 
 class SearchWidgetState extends ConsumerState<SearchWidget> {
-
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -42,7 +43,7 @@ class SearchWidgetState extends ConsumerState<SearchWidget> {
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-          onChanged: null,
+          onChanged: widget.onQuery,
         ),
         children: [
           _SearchWidgetMainTags(),

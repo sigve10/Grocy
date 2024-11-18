@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:grocy/main.dart';
 import 'package:grocy/widget/search_widget.dart';
-import '../data/dummy_data.dart';
 import '../models/product.dart';
-import '../screens/account_screen.dart';
 import 'product_screen.dart';
-
 
 class ProductList extends StatefulWidget {
   const ProductList({super.key});
@@ -16,50 +13,49 @@ class ProductList extends StatefulWidget {
 
 // The state of the ProductList widget.
 class ProductListState extends State<ProductList> {
-  // final List<Product> products = DummyData.getProducts();
-
+  // Holds a list from supabase that updates (through queries etc)
   List<Product> supabaseProducts = [];
-  List<Product> filteredProducts = [];
-  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    //filteredProducts = products;
     fetchProducts();
   }
 
-  Future<void> fetchProducts() async {
-  try {
+  /// Fetches all the products from supabase.
+  /// TODO: connect it to tags.
+  Future<void> fetchProducts({String query = ''}) async {
+    List<Product> productsFromSupabase = [];
 
-    // Fetch the data from the 'products' table
-    final List<dynamic> data = await supabase.from('products').select();
+    try {
+      var supabaseQuery = supabase.from('products').select();
 
-    // Parse the data from the database into a list of products.
-    List<Product> productsFromSupabase = data
-        .map((item) => Product.fromJson(item as Map<String, dynamic>))
-        .toList();
+      // Add query filtering
+      if (query.isNotEmpty) {
+        supabaseQuery = supabaseQuery.ilike('name', '%$query%');
+      }
 
+      // Fetch product data
+      final List<dynamic> data = await supabaseQuery;
+
+      // Parse the data into Product objects
+      productsFromSupabase = data
+          .map((item) => Product.fromJson(item as Map<String, dynamic>))
+          .toList();
+    } catch (error) {
+      debugPrint('Error fetching products: $error');
+      // Optional: Handle the error (e.g., show a message or retry)
+    }
+
+    // Update state after fetching products
     setState(() {
       supabaseProducts = productsFromSupabase;
-      filteredProducts = supabaseProducts;
-      isLoading = false;
-    });
-  } catch (error) {
-    setState(() {
-      isLoading = false;
     });
   }
-}
 
+  // Filter the products based on query in the search bar.
   void _filterProducts(String query) {
-    setState(() {
-      //filteredProducts = products
-      filteredProducts = supabaseProducts
-          .where((product) =>
-              product.name.toLowerCase().contains(query.toLowerCase()))
-          .toList();
-    });
+    fetchProducts(query: query);
   }
 
   @override
@@ -67,12 +63,14 @@ class ProductListState extends State<ProductList> {
     return Scaffold(
       body: Column(
         children: [
-          const SearchWidget(),
+          SearchWidget(
+            onQuery: _filterProducts,
+          ),
           Expanded(
             child: ListView.builder(
-              itemCount: filteredProducts.length,
+              itemCount: supabaseProducts.length,
               itemBuilder: (context, index) {
-                final product = filteredProducts[index];
+                final product = supabaseProducts[index];
                 return GestureDetector(
                   onTap: () {
                     Navigator.push(
