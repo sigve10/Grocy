@@ -1,5 +1,5 @@
 class Rating {
-  final String userEmail;
+  final String userId;
   final String productEan;
   double? customerSatisfactionRating;
   double? labelAccuracyRating;
@@ -7,13 +7,13 @@ class Rating {
   double? consistencyRating;
 
   Rating({
-    required this.userEmail,
+    required this.userId,
     required this.productEan
   });
 
   /// Get the weak key of this rating
   String get ratingKey {
-    return userEmail + productEan;
+    return userId + productEan;
   }
 
   /// The average rating of the product based on all rated categories
@@ -42,7 +42,7 @@ class Rating {
         "value": labelAccuracyRating
       },
       {
-        "label": "Bank for Buck",
+        "label": "Bang for Buck",
         "value": priceRating
       },
       {
@@ -51,4 +51,22 @@ class Rating {
       },
     ];
   }
+
+
+  /// Factory method to parse the rating (similar to product)
+  factory Rating.fromJson(Map<String, dynamic> json) {
+    return Rating(
+      userId: json['user_id'] ?? '',
+      productEan: json['product_ean'] ?? '',
+    )
+    // Use cascade operator to assign values after the creation of the rating object.
+    // Need to use it as constructor only initializes the "keys", not the ratings.
+    // double giving problems, need to use int in database, or change it ?
+      ..customerSatisfactionRating =
+          (json['customer_satisfaction'] as num?)?.toDouble()
+      ..labelAccuracyRating = (json['label_accuracy'] as num?)?.toDouble()
+      ..priceRating = (json['price_accuracy'] as num?)?.toDouble()
+      ..consistencyRating = (json['consistency'] as num?)?.toDouble();
+  }
+
 }
