@@ -6,34 +6,31 @@ import 'package:grocy/models/tag.dart';
 final tagProvider =
     StateNotifierProvider<TagNotifier, List<Tag>>((ref) => TagNotifier());
 
+/// State notifier (Riverpod) for managing tags.
+/// Fetches tags from the database.
 class TagNotifier extends StateNotifier<List<Tag>> {
   TagNotifier() : super([]);
 
+  ///Fetches tags from Supabase, and grabs the unique primary tags.
   Future<void> fetchTags() async {
     try {
       final response = await supabase.from('tags').select();
-      debugPrint('Supabase response: $response');
 
       final tags = (response as List<dynamic>)
           .map((item) => Tag.fromJson(item as Map<String, dynamic>))
           .toList();
 
-      debugPrint('Mapped tags: $tags');
-
-      // Extract unique primary tags
-      final primaryTagsSet = <String>{};
-      for (var tag in tags) {
-        primaryTagsSet.add(tag.primaryTag!);
-      }
-
-      final primaryTags = primaryTagsSet.map((name) => Tag(name: name)).toList();
-
-      // Update state with primary tags
-      state = primaryTags;
+      // Grab only unique primary tags. As there are multiple of the same values in the DB atm.
+      // May change database structure later to connect them to numbers again, and use a second table like Sigve mentioned.
+      // Handle dupe on supa instead of here?
+      state = tags
+          .map((tag) => tag.primaryTag!)
+          .toSet() //To only get the unique tags to be shown. Yes I know it's not server side. 
+          .map((name) => Tag(name: name))
+          .toList();
     } catch (error) {
       debugPrint('Error fetching tags: $error');
-      // Handle error appropriately
+      // I don't know how to handle errors properly :) User feedback?
     }
   }
 }
-
