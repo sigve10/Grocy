@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:grocy/screens/tabs_container_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -28,7 +29,7 @@ Future<void> main() async {
   //TODO: set up android and IOS as well, before we push our project at the end.
   // https://supabase.com/docs/guides/getting-started/tutorials/with-flutter?queryGroups=platform&platform=android
   usePathUrlStrategy();
-  runApp(const MyApp());
+  runApp(ProviderScope(child: const MyApp()));
 }
 
 final supabase = Supabase.instance.client;

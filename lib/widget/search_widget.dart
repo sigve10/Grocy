@@ -1,20 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:grocy/data/dummy_data.dart';
+import 'package:grocy/provider/tag_provider.dart';
 import 'package:grocy/models/tag.dart';
 import 'package:grocy/screens/account_screen.dart';
 
 class SearchWidget extends ConsumerStatefulWidget {
-  const SearchWidget({super.key});
+  final ValueChanged<String> onQuery;
+  final ValueChanged<Tag?> onTagSelected;
+
+  const SearchWidget({
+    required this.onQuery,
+    required this.onTagSelected,
+  });
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() {
-    return SearchWidgetState();
-  }
+  ConsumerState<SearchWidget> createState() => _SearchWidgetState();
 }
 
-class SearchWidgetState extends ConsumerState<SearchWidget> {
-
+class _SearchWidgetState extends ConsumerState<SearchWidget> {
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -42,70 +45,92 @@ class SearchWidgetState extends ConsumerState<SearchWidget> {
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-          onChanged: null,
+          onChanged: widget.onQuery,
         ),
         children: [
-          _SearchWidgetMainTags(),
-          _SearchWidgetUserTags()
+          _SearchWidgetMainTags(onTagSelected: widget.onTagSelected),
+          const _SearchWidgetUserTags(),
         ],
-      )
+      ),
     );
   }
 }
 
 class _SearchWidgetMainTags extends ConsumerStatefulWidget {
+  final ValueChanged<Tag?> onTagSelected;
+
+  const _SearchWidgetMainTags({
+    required this.onTagSelected,
+  });
+
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => _SearchWidgetMainTagsState();
+  ConsumerState<_SearchWidgetMainTags> createState() =>
+      _SearchWidgetMainTagsState();
 }
 
 class _SearchWidgetMainTagsState extends ConsumerState<_SearchWidgetMainTags> {
-  List<Tag> primaryTags = DummyData.getPrimaryTags();
-
   Tag? selectedMainTag;
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(tagProvider.notifier).fetchTags();
+    });
+  }
+
   bool isTagSelected(Tag tag) {
-    return selectedMainTag == tag;
+    // Changed it because the == didn't quite work with the parsing.
+    return selectedMainTag?.name == tag.name;
   }
 
   void setTagCategory(Tag? selected) {
     setState(() {
       selectedMainTag = selected;
     });
+    widget.onTagSelected(selected);
   }
 
   @override
   Widget build(BuildContext context) {
+    final tags = ref.watch(tagProvider);
+
+    // Filter primary tags (primaryTag == null)
+    final primaryTags = tags.where((tag) => tag.primaryTag == null).toList();
+
     return Wrap(
-      direction: Axis.horizontal,
       spacing: 4.0,
       runSpacing: 4.0,
       alignment: WrapAlignment.center,
-      children: [
-        for (Tag primaryTag in primaryTags)
-          ChoiceChip(
-            selected: (){ return isTagSelected(primaryTag); }(),
-            label: Text(primaryTag.name),
-            onSelected: (bool selected) {setTagCategory(selected ? primaryTag : null);},
-          )
-      ],
+      children: primaryTags.map((tag) {
+        return ChoiceChip(
+          selected: isTagSelected(tag),
+          label: Text(tag.name),
+          onSelected: (bool selected) {
+            setTagCategory(selected ? tag : null);
+          },
+        );
+      }).toList(),
     );
   }
-
 }
 
-class _SearchWidgetUserTags extends StatefulWidget {
+class _SearchWidgetUserTags extends ConsumerStatefulWidget {
+  const _SearchWidgetUserTags();
+
   @override
-  State<StatefulWidget> createState() => _SearchWidgetUserTagsState();
+  ConsumerState<_SearchWidgetUserTags> createState() =>
+      _SearchWidgetUserTagsState();
 }
 
-class _SearchWidgetUserTagsState extends State<_SearchWidgetUserTags> {
+class _SearchWidgetUserTagsState extends ConsumerState<_SearchWidgetUserTags> {
   TextEditingController tagSearchController = TextEditingController();
   final Set<String> selectedUserTags = {};
 
   void addUserTag(String tag) {
     setState(() {
       selectedUserTags.add(tag);
-      tagSearchController.text = "";
+      tagSearchController.clear();
     });
   }
 
@@ -113,69 +138,69 @@ class _SearchWidgetUserTagsState extends State<_SearchWidgetUserTags> {
     setState(() => selectedUserTags.remove(tag));
   }
 
-  Iterable<Tag> getTagsBySearch (TextEditingValue search) {
-    if (search.text == "") {
-      return const Iterable<Tag>.empty();
-    }
-    return DummyData.getUserTags().where((Tag tag) {
-      return tag.name.toLowerCase().contains(search.text.toLowerCase());
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    final tags = ref.watch(tagProvider);
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-      child: Column(
-        children: [
-          Autocomplete<Tag>(
-            optionsBuilder: getTagsBySearch,
-            displayStringForOption: (Tag option) => option.name,
-            onSelected: (tag) => addUserTag(tag.name),
-            fieldViewBuilder: (context, controller, focus, submitted) {
-              tagSearchController = controller;
-              return TextField(
-                focusNode: focus,
-                controller: tagSearchController,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.tag),
-                  border: OutlineInputBorder(),
-                  hintText: "Find tags..."
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: 16.0),
-          Wrap(
-            spacing: 4.0,
-            runSpacing: 4.0,
-            alignment: WrapAlignment.center,
-            direction: Axis.horizontal,
-            children: [
-              for (String tag in selectedUserTags)
-                Chip(
-                  label: RichText(
-                    text: TextSpan(
-                      children: [
-                        WidgetSpan(
-                          alignment: PlaceholderAlignment.middle,
-                          child: Icon(
-                            Icons.tag,
-                            size: 20,
-                            color: Theme.of(context).colorScheme.onSurface.withAlpha(128)
-                          )
-                        ),
-                        TextSpan(text: tag)
-                      ]
-                    )
+      child: Column(children: [
+        Autocomplete<Tag>(
+          optionsBuilder: (TextEditingValue textEditingValue) {
+            if (textEditingValue.text.isEmpty) {
+              return const Iterable<Tag>.empty();
+            }
+            return tags.where((Tag tag) {
+              return tag.name
+                  .toLowerCase()
+                  .contains(textEditingValue.text.toLowerCase());
+            });
+          },
+          displayStringForOption: (Tag option) => option.name,
+          onSelected: (tag) => addUserTag(tag.name),
+          fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
+            tagSearchController = controller;
+            return TextField(
+              focusNode: focusNode,
+              controller: tagSearchController,
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.tag),
+                border: OutlineInputBorder(),
+                hintText: "Find tags...",
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 16.0),
+        Wrap(
+          spacing: 4.0,
+          runSpacing: 4.0,
+          alignment: WrapAlignment.center,
+          children: selectedUserTags.map((tag) {
+            return Chip(
+              label: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.tag,
+                    size: 20,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withOpacity(0.6),
                   ),
-                  onDeleted: () => removeUserTag(tag),
-                )
-            ]
-          )
-        ]
-      ),
+                  const SizedBox(width: 4),
+                  Text(
+                    tag,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
+              ),
+              onDeleted: () => removeUserTag(tag),
+            );
+          }).toList(),
+        ),
+      ]),
     );
   }
-
 }

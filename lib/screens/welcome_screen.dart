@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:grocy/main.dart';
+import 'account_screen.dart';
 import 'package:grocy/extentions/snackbar_context.dart';
+import 'package:grocy/styling/button_styles.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// The welcome page that user lands on if they're not already signed in.
@@ -19,60 +21,118 @@ class _WelcomePageState extends State<WelcomePage> {
   final TextEditingController _emailController = TextEditingController();
   bool _isLoading = false;
   bool _isRegistered = false; // Tracks whether the user is already registered.
+  late final StreamSubscription<AuthState> _authStateSubscription;
 
   /// Handles user authentication via Supabase's magic link.
   ///
   /// - If '_isRegistered' is 'false', it gives user feedback to confirm sign up via email.
   /// - If '_isRegistered' is 'true', it gives user feedback to sign in via email.
-  Future<void> _handleAuth() async {
-    final action = _isRegistered ? 'Create Account' : 'Sign In';
-    try {
-      setState(() {
-        _isLoading = true;
-      });
+Future<void> _handleAuth() async {
+  final action = _isRegistered ? 'New User? Create Account' : 'Sign In';
 
-      await supabase.auth.signInWithOtp(
-        email: _emailController.text.trim(),
-        emailRedirectTo:
-            kIsWeb ? null : 'io.supabase.flutterquickstart://login-callback/',
-      );
-      if (mounted) {
-        final message = _isRegistered
+  setState(() {
+    _isLoading = true;
+  });
+
+  final email = _emailController.text.trim();
+  // Because the message should never be null, I am not using String? here.
+  String message = '';
+
+  try {
+    // Check if the email exists in the "profiles" table
+    final response = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('email', email)
+        .maybeSingle();
+
+    if (response != null && _isRegistered) {
+      message = 'This email is already registered. Please sign in instead.';
+    } else if (response == null && !_isRegistered) {
+      message = 'No account found for this email. Please sign up.';
+    } else {
+      try {
+        await supabase.auth.signInWithOtp(
+          email: email,
+          emailRedirectTo:
+              kIsWeb ? null : 'io.supabase.flutterquickstart://login-callback/',
+        );
+        message = _isRegistered
             ? 'Check your email to confirm sign up!'
             : 'Check your email for a login link!';
-        // Uses the snackbar extension previously in the main file.
-        context.showSnackBar(message);
         _emailController.clear();
-      }
-    } on AuthException catch (error) {
-      if (mounted) {
-        // Uses the extension instead from the new separate file.
-        context.showSnackBar('$action failed: ${error.message}', isError: true);
-      }
-    } catch (error) {
-      if (mounted) {
-        context.showSnackBar('Unexpected error during $action', isError: true);
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+      } on AuthException catch (error) {
+        message = '$action failed: ${error.message}';
       }
     }
+
+    if (mounted) {
+      context.showSnackBar(message, isError: message.startsWith('$action failed'));
+    }
+  } on PostgrestException catch (error) {
+    if (mounted) {
+      context.showSnackBar('$action failed: ${error.message}', isError: true);
+    }
+  } catch (error) {
+    if (mounted) {
+      context.showSnackBar('Unexpected error during $action', isError: true);
+    }
+  } finally {
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+}
+
+
+
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Check for an existing session, to prevent Flutter from trying to replace WelcomePage with AccountPage
+    // while WelcomePage is being set up in initstate.
+    final session = supabase.auth.currentSession;
+    if (session != null) {
+      Future.microtask(() {
+        if (mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const AccountPage()),
+          );
+        }
+      });
+    }
+
+    // Listen for authentication state changes (from Supabase's own project)
+    _authStateSubscription = supabase.auth.onAuthStateChange.listen(
+      (data) {
+        final session = data.session;
+        if (session != null && mounted) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const AccountPage()),
+          );
+        }
+      },
+      onError: (error) {
+        if (mounted) {
+          context.showSnackBar('Error: ${error.toString()}', isError: true);
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _authStateSubscription.cancel();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final ButtonStyle buttonStyle = ElevatedButton.styleFrom(
-      minimumSize: const Size(200, 60),
-      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-      textStyle: const TextStyle(fontSize: 20),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-      ),
-    );
-
     return Scaffold(
       appBar: AppBar(
         title: const Padding(
@@ -110,12 +170,12 @@ class _WelcomePageState extends State<WelcomePage> {
             ),
             const SizedBox(height: 26),
             ElevatedButton(
-              style: buttonStyle,
+              style: ButtonStyles.filled,
               onPressed: _isLoading ? null : _handleAuth,
               child: Text(
                 _isLoading
                     ? 'Please wait...'
-                    : (_isRegistered ? 'Sign Up' : 'Sign In'),
+                    : (_isRegistered ? 'Create an account' : 'Sign in'),
               ),
             ),
             // My magnificent solution for margin / gap.
@@ -123,7 +183,7 @@ class _WelcomePageState extends State<WelcomePage> {
             const Text('Or'),
             const SizedBox(height: 15),
             ElevatedButton(
-              style: buttonStyle,
+              style: ButtonStyles.filled,
               onPressed: () {
                 setState(() {
                   _isRegistered = !_isRegistered;
@@ -131,7 +191,7 @@ class _WelcomePageState extends State<WelcomePage> {
                 });
               },
               child: Text(
-                _isRegistered ? 'Back to Sign In' : 'Sign Up',
+                _isRegistered ? 'Back to Sign In' : 'Submit',
                 style: const TextStyle(fontSize: 18),
               ),
             ),
@@ -139,11 +199,5 @@ class _WelcomePageState extends State<WelcomePage> {
         ),
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    super.dispose();
   }
 }

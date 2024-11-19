@@ -130,7 +130,7 @@ class _ProductScreenState extends State<ProductScreen> {
             ),
 
             RatingsSection(rating: 
-              Rating(productEan: "", userEmail: "")
+              Rating(productEan: "", userId: "")
                 ..customerSatisfactionRating = 5
                 ..labelAccuracyRating = 4.5
                 ..priceRating = 2.5
@@ -265,7 +265,7 @@ class ReviewState extends State<Review> {
   final String reviewPfp = "";
   final Rating rating = Rating(
     productEan: "",
-    userEmail: ""
+    userId: ""
   )
     ..customerSatisfactionRating = 5
     ..labelAccuracyRating = 4.5
