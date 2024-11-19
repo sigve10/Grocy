@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:grocy/main.dart';
+import 'package:grocy/models/tag.dart';
 import 'package:grocy/widget/search_widget.dart';
 import '../models/product.dart';
 import 'product_screen.dart';
@@ -22,40 +23,51 @@ class ProductListState extends State<ProductList> {
     fetchProducts();
   }
 
-  /// Fetches all the products from supabase.
-  /// TODO: connect it to tags.
-  Future<void> fetchProducts({String query = ''}) async {
-    List<Product> productsFromSupabase = [];
-
+  /// Fetches products based on the query and selected tag.
+  Future<void> fetchProducts({String query = '', Tag? selectedTag}) async {
+    // Everything under can throw errors
     try {
-      var supabaseQuery = supabase.from('products').select();
+      // Select from the product_details view function within supabase, all products that has a valid tag.
+      var supabaseQuery = supabase.from('product_details').select('*');
 
-      // Add query filtering
+      // Apply search filter if/when user writes in the search box.
       if (query.isNotEmpty) {
+        // % match zero or more at both ends of string, $ holds the search term aka query.
+        // https://supabase.com/docs/reference/dart/ilike
+        // Remember to check what name you are using, Emma, so it doesn't break functionality again :)
         supabaseQuery = supabaseQuery.ilike('name', '%$query%');
       }
 
-      // Fetch product data
-      final List<dynamic> data = await supabaseQuery;
+      // Apply filter if/when a tag is selected.
+      if (selectedTag != null) {
+        supabaseQuery = supabaseQuery.eq('tag_primary_tag', selectedTag.name);
+      }
 
-      // Parse the data into Product objects
-      productsFromSupabase = data
-          .map((item) => Product.fromJson(item as Map<String, dynamic>))
+      // Limit the first products shown later? or limit amount of products in the query at least?
+      final response = await supabaseQuery;
+
+      // Map the response from supa to a list of products. Converts them via the fromJson factory method.
+      final products = (response as List<dynamic>)
+          .map((item) => Product.fromJson(item))
           .toList();
-    } catch (error) {
-      debugPrint('Error fetching products: $error');
-      // Optional: Handle the error (e.g., show a message or retry)
-    }
 
-    // Update state after fetching products
-    setState(() {
-      supabaseProducts = productsFromSupabase;
-    });
+      setState(() {
+        supabaseProducts = products;
+      });
+    } catch (error) {
+      // I know the error handling isn't good :) WIP
+      debugPrint('Error fetching products: $error');
+    }
   }
 
   // Filter the products based on query in the search bar.
   void _filterProducts(String query) {
     fetchProducts(query: query);
+  }
+
+  /// Handle tag selection from SearchWidget.
+  void _handleTagSelected(Tag? selectedTag) {
+    fetchProducts(selectedTag: selectedTag);
   }
 
   @override
@@ -65,6 +77,7 @@ class ProductListState extends State<ProductList> {
         children: [
           SearchWidget(
             onQuery: _filterProducts,
+            onTagSelected: _handleTagSelected,
           ),
           Expanded(
             child: ListView.builder(
@@ -147,7 +160,7 @@ class ProductListState extends State<ProductList> {
                                               .onSurface
                                               .withOpacity(0.6),
                                         ),
-                                  )
+                                  ),
                                 ],
                               ),
                             ],
