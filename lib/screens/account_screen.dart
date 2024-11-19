@@ -20,7 +20,7 @@ class AccountPage extends StatefulWidget {
 /// Manages the state of user interactions and data.
 class _AccountPageState extends State<AccountPage> {
   final _usernameController = TextEditingController();
-  final _emailController = TextEditingController(); // Controller for email
+  final _emailController = TextEditingController();
   var _loading = true;
 
   /// Called once a user id is received within `onAuthenticated()`
@@ -50,16 +50,15 @@ class _AccountPageState extends State<AccountPage> {
       final data =
           await supabase.from('profiles').select().eq('id', userId).single();
 
-      // for debugging, I am going insane
-      print('Fetched Profile Data: $data');
-
       _usernameController.text = data['username'] ?? '';
       _emailController.text = data['email'] ?? '';
 
-      // Debugging print
-      print('Email in _emailController: ${_emailController.text}');
-
-      setState(() {}); // test to see if this is needed still, if bug is gone.
+      // Check if username is empty and prompt for username
+      if ((_usernameController.text.isEmpty ||
+              _usernameController.text == '') &&
+          mounted) {
+        _promptForUsername();
+      }
     } on PostgrestException catch (error) {
       if (mounted) {
         context.showSnackBar('Error: ${error.message}', isError: true);
@@ -92,10 +91,10 @@ class _AccountPageState extends State<AccountPage> {
     super.dispose();
   }
 
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    // Same as the welcome_screen.
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      // Same as the welcome_screen.
       appBar: AppBar(
         title: const Padding(
           padding: EdgeInsets.only(top: 20),
@@ -111,44 +110,43 @@ Widget build(BuildContext context) {
         centerTitle: true,
         toolbarHeight: 80,
       ),
-    body: Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SizedBox(
-            width: 350,
-            child: TextFormField(
-              controller: _usernameController,
-              decoration: const InputDecoration(labelText: 'User Name'),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SizedBox(
+              width: 350,
+              child: TextFormField(
+                controller: _usernameController,
+                decoration: const InputDecoration(labelText: 'User Name'),
+              ),
             ),
-          ),
-          const SizedBox(height: 18),
-          SizedBox(
-            width: 350,
-            child: TextFormField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
-              readOnly: true,
+            const SizedBox(height: 18),
+            SizedBox(
+              width: 350,
+              child: TextFormField(
+                controller: _emailController,
+                decoration: const InputDecoration(labelText: 'Email'),
+                readOnly: true,
+              ),
             ),
-          ),
-          const SizedBox(height: 26),
-          ElevatedButton(
-            style: ButtonStyles.filled,
-            onPressed: _loading ? null : _updateProfile,
-            child: Text(_loading ? 'Saving...' : 'Update'),
-          ),
-          const SizedBox(height: 18),
-          OutlinedButton(
-            style: ButtonStyles.outlined,
-            onPressed: _signOut,
-            child: const Text('Sign Out'),
-          ),
-        ],
+            const SizedBox(height: 26),
+            ElevatedButton(
+              style: ButtonStyles.filled,
+              onPressed: _loading ? null : _updateProfile,
+              child: Text(_loading ? 'Saving...' : 'Update'),
+            ),
+            const SizedBox(height: 18),
+            OutlinedButton(
+              style: ButtonStyles.outlined,
+              onPressed: _signOut,
+              child: const Text('Sign Out'),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
-}
-
+    );
+  }
 
   /// Called when user taps `Update` button
   /// Updates the user's profile in the database.
@@ -202,5 +200,62 @@ Widget build(BuildContext context) {
         context.showSnackBar('Unexpected error occurred', isError: true);
       }
     }
+  }
+
+  /// A non-dismissable dialog that prompts user to choose a username upon signing up.
+  void _promptForUsername() {
+    // Likte ikke underscore, så fjerner.
+    final dialogUsernameController = TextEditingController();
+
+    showDialog(
+      context: context,
+      barrierDismissible: false, // user can't navigate out of this screen, they have to actually choose a username.
+      builder: (BuildContext context) {
+        return PopScope<bool>(
+          onPopInvokedWithResult: (bool didPop, bool? result) {
+            if (!didPop) {
+              // Handle case where back navigation was not successful
+              return;
+            }
+            // Optionally, use the result for further actions
+            debugPrint('Pop result: $result');
+          },
+          child: AlertDialog(
+            title: const Text('Set Your Username'),
+            content: TextField(
+              controller: dialogUsernameController,
+              decoration: const InputDecoration(
+                hintText: 'Enter a username',
+              ),
+            ),
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Submit'),
+                onPressed: () async {
+                  final username = dialogUsernameController.text.trim();
+                  if (username.isEmpty) {
+                    context.showSnackBar('Username cannot be empty',
+                        isError: true);
+                    return;
+                  }
+
+                  _usernameController.text = username;
+
+                  // Update the user profile with the name chosen at sign up.
+                  await _updateProfile();
+
+                  // Close dialog when the username is set.
+                  if (!mounted) return;
+                  if (!_loading) {
+                    Navigator.of(context)
+                        .pop(true); // Pass `true` as the pop result
+                  }
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 }

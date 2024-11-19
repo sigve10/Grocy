@@ -191,7 +191,7 @@ Future<void> _handleAuth() async {
                 });
               },
               child: Text(
-                _isRegistered ? 'Back to Sign In' : 'Create an account',
+                _isRegistered ? 'Back to Sign In' : 'Submit',
                 style: const TextStyle(fontSize: 18),
               ),
             ),
