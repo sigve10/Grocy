@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:grocy/screens/create_product_screen.dart';
 import 'package:grocy/screens/product_screen.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -21,6 +22,7 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen>
     autoStart: true,
   );
   Barcode? _barcode;
+  bool isTryFetch = false;
   StreamSubscription<Object?>? _subscription;
 
   final supabase = Supabase.instance.client;
@@ -31,12 +33,14 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen>
 
       print('Barcode detected: $detectedBarcode');
 
-      if (detectedBarcode != null && detectedBarcode.displayValue != null) {
+      if (detectedBarcode != null && detectedBarcode.displayValue != null && isTryFetch == false) {
+        isTryFetch = true;
         setState(() {
           _barcode = detectedBarcode;
         });
 
-        fetchProduct(detectedBarcode.displayValue!);
+        fetchProduct(detectedBarcode.displayValue!)
+          .whenComplete(() => isTryFetch = false);
       }
     }
   }
@@ -57,12 +61,17 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen>
         return;
       }
 
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ProductScreen(product: product),
-        ),
-      );
+      if (product.primaryTag == null) {
+        await Navigator.push(context,
+            MaterialPageRoute(builder: (context) => CreateProductScreen(product: product,)));
+      } else {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductScreen(product: product),
+          ),
+        );
+      }
     } else {
       print("Error: " + res.data);
     }
@@ -100,14 +109,14 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen>
       case AppLifecycleState.paused:
         return;
       case AppLifecycleState.resumed:
-      // Restart the scanner when the app is resumed.
-      // Don't forget to resume listening to the barcode events.
+        // Restart the scanner when the app is resumed.
+        // Don't forget to resume listening to the barcode events.
         _subscription = controller.barcodes.listen(_handleBarcode);
 
         unawaited(controller.start());
       case AppLifecycleState.inactive:
-      // Stop the scanner when the app is paused.
-      // Also stop the barcode events subscription.
+        // Stop the scanner when the app is paused.
+        // Also stop the barcode events subscription.
         unawaited(_subscription?.cancel());
         _subscription = null;
         unawaited(controller.stop());

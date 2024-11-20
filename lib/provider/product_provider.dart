@@ -10,14 +10,24 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 // https://supabase.com/docs/reference/dart/introduction
 
 final productProvider = StateNotifierProvider<ProductProvider, List<Product>>(
-  (ref) => ProductProvider(ref)
-);
+    (ref) => ProductProvider(ref));
 
 class ProductProvider extends StateNotifier<List<Product>> {
   final Ref ref;
   ProductProvider(this.ref) : super(const []) {
     ref.listen(searchProvider, (oldValue, newValue) {
+      print("Provider updated");
       fetchProducts();
+    });
+  }
+
+  void addProduct(Product product) async {
+    await supabase.from('products').insert({
+      'ean': product.ean,
+      'name': product.name,
+      'description': product.description,
+      'imageurl': product.imageUrl,
+      'primary_tag': product.primaryTag
     });
   }
 

@@ -2,32 +2,56 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:grocy/models/tag.dart';
 import 'package:grocy/provider/tag_provider.dart';
+import 'package:grocy/screens/product_screen.dart';
+
+import '../models/product.dart';
+import '../provider/product_provider.dart';
 
 class CreateProductScreen extends ConsumerStatefulWidget {
-  const CreateProductScreen({super.key});
+  const CreateProductScreen({super.key, required this.product});
+
+  final Product product;
 
   @override
-  ConsumerState<ConsumerStatefulWidget> createState() => CreateProductScreenState();
+  ConsumerState<ConsumerStatefulWidget> createState() =>
+      CreateProductScreenState();
 }
 
 class CreateProductScreenState extends ConsumerState<CreateProductScreen> {
-  final String autofillName = "Apple";
+  late final ProductProvider _productProvider;
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController descController = TextEditingController();
   final TextEditingController eanController = TextEditingController();
   Tag? selectedPrimaryTag;
 
-  void onSubmit() {
-    // Empy!!
+  void onSubmit() async {
+    if (selectedPrimaryTag != null) {
+      final product = Product(
+          ean: widget.product.ean,
+          name: widget.product.name,
+          description: widget.product.description,
+          imageUrl: widget.product.imageUrl,
+          primaryTag: selectedPrimaryTag!.name);
+      _productProvider.addProduct(product);
+      Navigator.pop(context);
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ProductScreen(product: product),
+        ),
+      );
+    }
   }
 
   void onCancel() {
-    // Also empy :((
+    Navigator.pop(context);
   }
 
   @override
   void initState() {
+    _productProvider = ref.read(productProvider.notifier);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(primaryTagProvider.notifier).fetchPrimaryTags();
     });
@@ -36,6 +60,10 @@ class CreateProductScreenState extends ConsumerState<CreateProductScreen> {
 
   @override
   Widget build(BuildContext context) {
+    nameController.text = widget.product.name;
+    descController.text = widget.product.description ?? "";
+    eanController.text = widget.product.ean;
+
     final List<Tag> primaryTags = ref.watch(primaryTagProvider);
 
     return SingleChildScrollView(
@@ -45,23 +73,19 @@ class CreateProductScreenState extends ConsumerState<CreateProductScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                "Add a Product",
-                style: Theme.of(context).textTheme.titleLarge
-              ),
+              Text("Add a Product",
+                  style: Theme.of(context).textTheme.titleLarge),
               const SizedBox(height: 16.0),
               DropdownButtonFormField(
                 hint: Text("Select a primary tag"),
                 decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  floatingLabelBehavior: FloatingLabelBehavior.always,
-                  helper: selectedPrimaryTag == null ? Text(
-                    "Required",
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error
-                    )
-                  ) : null
-                ),
+                    border: OutlineInputBorder(),
+                    floatingLabelBehavior: FloatingLabelBehavior.always,
+                    helper: selectedPrimaryTag == null
+                        ? Text("Required",
+                            style: TextStyle(
+                                color: Theme.of(context).colorScheme.error))
+                        : null),
                 value: selectedPrimaryTag,
                 items: [
                   for (Tag tag in primaryTags)
@@ -70,17 +94,15 @@ class CreateProductScreenState extends ConsumerState<CreateProductScreen> {
                       child: Text(tag.name),
                     )
                 ],
-                onChanged: (tag) => setState( () =>
-                  selectedPrimaryTag = tag
-                ),
+                onChanged: (tag) => setState(() => selectedPrimaryTag = tag),
               ),
               const SizedBox(height: 24.0),
               const Divider(),
               const SizedBox(height: 24.0),
               TextField(
                 style: TextStyle(
-                  backgroundColor: Theme.of(context).colorScheme.surfaceBright
-                ),
+                    backgroundColor:
+                        Theme.of(context).colorScheme.surfaceBright),
                 controller: nameController,
                 readOnly: true,
                 decoration: const InputDecoration(
@@ -98,12 +120,11 @@ class CreateProductScreenState extends ConsumerState<CreateProductScreen> {
                 expands: false,
                 readOnly: true,
                 decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  floatingLabelBehavior: FloatingLabelBehavior.always,
-                  labelText: "Description",
-                  helperText: "Auto-filled",
-                  hintText: "Product has no description"
-                ),
+                    border: OutlineInputBorder(),
+                    floatingLabelBehavior: FloatingLabelBehavior.always,
+                    labelText: "Description",
+                    helperText: "Auto-filled",
+                    hintText: "Product has no description"),
               ),
               const SizedBox(height: 24.0),
               TextField(
@@ -111,11 +132,10 @@ class CreateProductScreenState extends ConsumerState<CreateProductScreen> {
                 readOnly: true,
                 keyboardType: const TextInputType.numberWithOptions(),
                 decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: "EAN (barcode)",
-                  helperText: "Auto-filled",
-                  floatingLabelBehavior: FloatingLabelBehavior.always
-                ),
+                    border: OutlineInputBorder(),
+                    labelText: "EAN (barcode)",
+                    helperText: "Auto-filled",
+                    floatingLabelBehavior: FloatingLabelBehavior.always),
               ),
               const SizedBox(height: 24.0),
               Row(
@@ -123,22 +143,13 @@ class CreateProductScreenState extends ConsumerState<CreateProductScreen> {
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: onCancel,
-                      child: const Text(
-                        "Cancel"
-                      )
-                    ),
+                        onPressed: onCancel, child: const Text("Cancel")),
                   ),
                   const SizedBox(width: 24.0),
                   Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                        foregroundColor: Theme.of(context).colorScheme.onPrimary
-                      ),
-                      onPressed: onSubmit,
-                      child: const Text("Submit")
-                    ),
+                    child: FilledButton(
+                        onPressed: selectedPrimaryTag == null ? null : onSubmit,
+                        child: const Text("Submit")),
                   )
                 ],
               )
