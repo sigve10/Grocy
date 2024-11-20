@@ -13,7 +13,12 @@ class SearchProvider extends StateNotifier<SearchState> {
   }
 
   void setMainTag(Tag? newTag) {
-    state = state.copyWith(mainTag: newTag);
+    if (newTag == null) {
+      state = state.copyWithoutPrimaryTag();
+    } else {
+      state = state.copyWith(mainTag: newTag);
+    }
+
   }
 
   void addUserTag(Tag tagToAdd) {
@@ -58,6 +63,18 @@ class SearchState {
     return SearchState(
       searchText: searchText ?? this.searchText,
       mainTag: mainTag ?? this.mainTag,
+      userTags: userTags ?? this.userTags
+    );
+  }
+
+  // This function is needed because maintag is nullable
+  SearchState copyWithoutPrimaryTag({
+    String? searchText,
+    Set<Tag>? userTags
+  }) {
+    return SearchState(
+      searchText: searchText ?? this.searchText,
+      mainTag: null,
       userTags: userTags ?? this.userTags
     );
   }

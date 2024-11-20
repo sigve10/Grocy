@@ -16,7 +16,7 @@ class SearchWidget extends ConsumerStatefulWidget {
 class _SearchWidgetState extends ConsumerState<SearchWidget> {
   late final ProductProvider _productProvider;
   late final SearchProvider _searchProvider;
-  
+
   @override
   void initState() {
     _productProvider = ref.read(productProvider.notifier);
@@ -26,13 +26,11 @@ class _SearchWidgetState extends ConsumerState<SearchWidget> {
 
   void setSearchTerm(String newTerm) {
     _searchProvider.setSearchTerm(newTerm);
-    _productProvider.fetchProducts(ref);
 
   }
 
   void setMainTag(Tag? newTag) {
     _searchProvider.setMainTag(newTag);
-    _productProvider.fetchProducts(ref);
   }
 
   @override
