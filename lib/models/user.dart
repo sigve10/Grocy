@@ -7,6 +7,6 @@ class User {
   User({required this.email, required this.nickname});
 
   factory User.fromJson(Map<String, dynamic> json) {
-    return User(email: 'email', nickname: 'username');
+    return User(email: json['email'] ?? '', nickname: json['username']);
   }
 }
