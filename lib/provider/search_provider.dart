@@ -1,14 +1,18 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:grocy/models/tag.dart';
 
-class SearchNotifier extends StateNotifier<SearchState> {
-  SearchNotifier() : super(const SearchState());
+final searchProvider = StateNotifierProvider<SearchProvider, SearchState>(
+  (ref) => SearchProvider()
+);
+
+class SearchProvider extends StateNotifier<SearchState> {
+  SearchProvider() : super(const SearchState());
 
   void setSearchTerm(String newTerm) {
     state = state.copyWith(searchText: newTerm);
   }
 
-  void setMainTag(Tag newTag) {
+  void setMainTag(Tag? newTag) {
     state = state.copyWith(mainTag: newTag);
   }
 
