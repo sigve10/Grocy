@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:grocy/screens/create_product_screen.dart';
 import 'package:grocy/screens/product_screen.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -18,10 +18,11 @@ class BarcodeScanScreen extends StatefulWidget {
 class _BarcodeScanScreenState extends State<BarcodeScanScreen>
     with WidgetsBindingObserver {
   final MobileScannerController controller = MobileScannerController(
-    formats: const [BarcodeFormat.all],
+    formats: const [BarcodeFormat.ean13],
     autoStart: true,
   );
   Barcode? _barcode;
+  bool isTryFetch = false;
   StreamSubscription<Object?>? _subscription;
 
   final supabase = Supabase.instance.client;
@@ -32,14 +33,14 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen>
 
       print('Barcode detected: $detectedBarcode');
 
-      if (detectedBarcode != null && detectedBarcode.displayValue != null) {
+      if (detectedBarcode != null && detectedBarcode.displayValue != null && isTryFetch == false) {
+        isTryFetch = true;
         setState(() {
-          _barcode = barcode.barcodes.firstOrNull;
+          _barcode = detectedBarcode;
         });
 
-        controller.stop();
-
-        fetchProduct(detectedBarcode.displayValue!);
+        fetchProduct(detectedBarcode.displayValue!)
+          .whenComplete(() => isTryFetch = false);
       }
     }
   }
@@ -51,8 +52,6 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen>
         headers: {"Content-Type": "application/json"},
         method: HttpMethod.post);
 
-    print(res.data); //temp logging
-
     if (res.status == 200 && res.data != null) {
       final productJson = res.data as Map<String, dynamic>;
       Product product = Product.fromJson(productJson);
@@ -62,14 +61,19 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen>
         return;
       }
 
-      await Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => ProductScreen(product: product),
-        ),
-      );
-
-      if (mounted) await controller.start();
+      if (product.primaryTag == null) {
+        await Navigator.push(context,
+            MaterialPageRoute(builder: (context) => CreateProductScreen(product: product,)));
+      } else {
+        await Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductScreen(product: product),
+          ),
+        );
+      }
+    } else {
+      print("Error: " + res.data);
     }
   }
 
@@ -93,20 +97,29 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    // If the controller is not ready, do not try to start or stop it.
+    // Permission dialogs can trigger lifecycle changes before the controller is ready.
+    if (!controller.value.hasCameraPermission) {
+      return;
+    }
+
     switch (state) {
+      case AppLifecycleState.detached:
+      case AppLifecycleState.hidden:
       case AppLifecycleState.paused:
+        return;
+      case AppLifecycleState.resumed:
+        // Restart the scanner when the app is resumed.
+        // Don't forget to resume listening to the barcode events.
+        _subscription = controller.barcodes.listen(_handleBarcode);
+
+        unawaited(controller.start());
+      case AppLifecycleState.inactive:
+        // Stop the scanner when the app is paused.
+        // Also stop the barcode events subscription.
         unawaited(_subscription?.cancel());
         _subscription = null;
         unawaited(controller.stop());
-        break;
-      case AppLifecycleState.resumed:
-        if (controller.value.isRunning == false) {
-          _subscription = controller.barcodes.listen(_handleBarcode);
-          unawaited(controller.start());
-        }
-        break;
-      default:
-        break;
     }
   }
 

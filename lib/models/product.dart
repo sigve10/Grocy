@@ -32,7 +32,7 @@ class Product {
       name: json['name'] ?? '',
       description: json['description'],
       imageUrl: json['imageurl'] ?? '',
-      primaryTag: json['primaryTag']
+      primaryTag: json['primary_tag']
     );
   }
 }

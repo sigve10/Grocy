@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:grocy/main.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:grocy/models/tag.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 final tagProvider =
     StateNotifierProvider<TagNotifier, List<Tag>>((ref) => TagNotifier());
+
+final primaryTagProvider =
+  StateNotifierProvider<PrimaryTagNotifier, List<Tag>>((ref) => PrimaryTagNotifier());
 
 /// State notifier (Riverpod) for managing tags.
 /// Fetches tags from the database.
@@ -12,25 +16,44 @@ class TagNotifier extends StateNotifier<List<Tag>> {
   TagNotifier() : super([]);
 
   ///Fetches tags from Supabase, and grabs the unique primary tags.
-  Future<void> fetchTags() async {
+  void fetchTags() async {
+    late final PostgrestList? response;
+    late final List<Tag>? userTags;
+
     try {
-      final response = await supabase.from('tags').select();
+      response = await supabase.from("tags").select();
 
-      final tags = (response as List<dynamic>)
-          .map((item) => Tag.fromJson(item as Map<String, dynamic>))
-          .toList();
-
-      // Grab only unique primary tags. As there are multiple of the same values in the DB atm.
-      // May change database structure later to connect them to numbers again, and use a second table like Sigve mentioned.
-      // Handle dupe on supa instead of here?
-      state = tags
-          .map((tag) => tag.primaryTag!)
-          .toSet() //To only get the unique tags to be shown. Yes I know it's not server side. 
-          .map((name) => Tag(name: name))
-          .toList();
-    } catch (error) {
+      userTags = (response as List<dynamic>)
+        .map((item) => Tag.fromJson(item as Map<String, dynamic>))
+        .toList();
+    } catch(error) {
       debugPrint('Error fetching tags: $error');
-      // I don't know how to handle errors properly :) User feedback?
+    }
+
+    if (userTags != null) {
+      state = userTags;
+    }
+  }
+}
+
+class PrimaryTagNotifier extends StateNotifier<List<Tag>> {
+  PrimaryTagNotifier() : super([]);
+
+  void fetchPrimaryTags() async {
+    print("Fetching primary tags");
+    late final PostgrestList? response;
+    late final List<Tag>? primaryTags;
+    try {
+      response = await supabase.from("primary_tags").select("name");
+      primaryTags = (response as List)
+        .map((item) => Tag.fromJson(item as Map<String, dynamic>))
+        .toList();
+    } catch (error) {
+      debugPrint("Error fetching primary tags: $error");
+    }
+
+    if (primaryTags != null) {
+      state = primaryTags;
     }
   }
 }

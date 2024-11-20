@@ -1,23 +1,36 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:grocy/provider/product_provider.dart';
+import 'package:grocy/provider/search_provider.dart';
 import 'package:grocy/provider/tag_provider.dart';
 import 'package:grocy/models/tag.dart';
 import 'package:grocy/screens/account_screen.dart';
 
 class SearchWidget extends ConsumerStatefulWidget {
-  final ValueChanged<String> onQuery;
-  final ValueChanged<Tag?> onTagSelected;
-
-  const SearchWidget({
-    required this.onQuery,
-    required this.onTagSelected,
-  });
+  const SearchWidget({super.key});
 
   @override
   ConsumerState<SearchWidget> createState() => _SearchWidgetState();
 }
 
 class _SearchWidgetState extends ConsumerState<SearchWidget> {
+  late final SearchProvider _searchProvider;
+
+  @override
+  void initState() {
+    _searchProvider = ref.read(searchProvider.notifier);
+    super.initState();
+  }
+
+  void setSearchTerm(String newTerm) {
+    _searchProvider.setSearchTerm(newTerm);
+
+  }
+
+  void setMainTag(Tag? newTag) {
+    _searchProvider.setMainTag(newTag);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -45,10 +58,10 @@ class _SearchWidgetState extends ConsumerState<SearchWidget> {
               borderRadius: BorderRadius.circular(8),
             ),
           ),
-          onChanged: widget.onQuery,
+          onChanged: setSearchTerm,
         ),
         children: [
-          _SearchWidgetMainTags(onTagSelected: widget.onTagSelected),
+          _SearchWidgetMainTags(),
           const _SearchWidgetUserTags(),
         ],
       ),
@@ -57,26 +70,24 @@ class _SearchWidgetState extends ConsumerState<SearchWidget> {
 }
 
 class _SearchWidgetMainTags extends ConsumerStatefulWidget {
-  final ValueChanged<Tag?> onTagSelected;
-
-  const _SearchWidgetMainTags({
-    required this.onTagSelected,
-  });
-
   @override
   ConsumerState<_SearchWidgetMainTags> createState() =>
       _SearchWidgetMainTagsState();
 }
 
 class _SearchWidgetMainTagsState extends ConsumerState<_SearchWidgetMainTags> {
+  late final SearchProvider _searchProvider;
   Tag? selectedMainTag;
 
   @override
   void initState() {
-    super.initState();
+    _searchProvider = ref.read(searchProvider.notifier);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(tagProvider.notifier).fetchTags();
+      ref.read(primaryTagProvider.notifier).fetchPrimaryTags();
     });
+
+    super.initState();
   }
 
   bool isTagSelected(Tag tag) {
@@ -88,15 +99,13 @@ class _SearchWidgetMainTagsState extends ConsumerState<_SearchWidgetMainTags> {
     setState(() {
       selectedMainTag = selected;
     });
-    widget.onTagSelected(selected);
+
+    _searchProvider.setMainTag(selected);
   }
 
   @override
   Widget build(BuildContext context) {
-    final tags = ref.watch(tagProvider);
-
-    // Filter primary tags (primaryTag == null)
-    final primaryTags = tags.where((tag) => tag.primaryTag == null).toList();
+    final primaryTags = ref.watch(primaryTagProvider);
 
     return Wrap(
       spacing: 4.0,
@@ -124,18 +133,30 @@ class _SearchWidgetUserTags extends ConsumerStatefulWidget {
 }
 
 class _SearchWidgetUserTagsState extends ConsumerState<_SearchWidgetUserTags> {
+  late final SearchProvider _searchProvider;
   TextEditingController tagSearchController = TextEditingController();
-  final Set<String> selectedUserTags = {};
+  Set<Tag> selectedUserTags = {};
 
-  void addUserTag(String tag) {
+  void addUserTag(Tag tag) {
     setState(() {
       selectedUserTags.add(tag);
       tagSearchController.clear();
     });
+    _searchProvider.addUserTag(tag);
   }
 
-  void removeUserTag(String tag) {
+  @override
+  void initState() {
+    _searchProvider = ref.read(searchProvider.notifier);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(tagProvider.notifier).fetchTags();
+    });
+    super.initState();
+  }
+
+  void removeUserTag(Tag tag) {
     setState(() => selectedUserTags.remove(tag));
+    _searchProvider.removeUserTag(tag);
   }
 
   @override
@@ -157,7 +178,7 @@ class _SearchWidgetUserTagsState extends ConsumerState<_SearchWidgetUserTags> {
             });
           },
           displayStringForOption: (Tag option) => option.name,
-          onSelected: (tag) => addUserTag(tag.name),
+          onSelected: (tag) => addUserTag(tag),
           fieldViewBuilder: (context, controller, focusNode, onSubmitted) {
             tagSearchController = controller;
             return TextField(
@@ -191,7 +212,7 @@ class _SearchWidgetUserTagsState extends ConsumerState<_SearchWidgetUserTags> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    tag,
+                    tag.name,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
                 ],

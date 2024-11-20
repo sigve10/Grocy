@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:grocy/screens/barcode_scan_screen.dart';
 import 'package:grocy/screens/product_list.dart';
+import 'package:grocy/screens/wishlist_screen.dart';
 
 class TabsContainerScreen extends StatefulWidget {
   const TabsContainerScreen({super.key});
@@ -18,7 +19,7 @@ class _TabsContainerScreenState extends State<TabsContainerScreen> {
   final Map<int, Widget> pages = {
     0: const BarcodeScanScreen(),
     1: const ProductList(),
-    2: const Column()
+    2: const WishlistScreen()
   };
 
   final Map<int, GlobalKey<NavigatorState>> navKeys = {
