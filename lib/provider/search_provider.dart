@@ -23,13 +23,13 @@ class SearchProvider extends StateNotifier<SearchState> {
 
   void addUserTag(Tag tagToAdd) {
     state = state.copyWith(
-      userTags: state.userTags..add(tagToAdd)
+      userTags: state.userTags.toSet()..add(tagToAdd)
     );
   }
 
   void removeUserTag(Tag tagToRemove) {
     state = state.copyWith(
-      userTags: state.userTags..remove(tagToRemove)
+      userTags: state.userTags.toSet()..remove(tagToRemove)
     );
   }
 

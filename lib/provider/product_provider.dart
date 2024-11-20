@@ -17,7 +17,6 @@ class ProductProvider extends StateNotifier<List<Product>> {
   final Ref ref;
   ProductProvider(this.ref) : super(const []) {
     ref.listen(searchProvider, (oldValue, newValue) {
-      print("Provider updated"); 
       fetchProducts();
     });
   }
@@ -25,32 +24,30 @@ class ProductProvider extends StateNotifier<List<Product>> {
   void fetchProducts() async {
     SearchState searchState = ref.read(searchProvider);
 
-    var query = supabase
-      .from("products")
-      .select("*");
+    print(searchState.userTags.map((e) => e.name).toList());
 
-    if (searchState.searchText.isNotEmpty) {
-      query = query.ilike("name", "%${searchState.searchText}%");
-    }
+    Map<String, dynamic> queryParams = {
+      "i_search_term": searchState.searchText,
+      "i_primary_tag": searchState.mainTag?.name,
+      "i_user_tags": searchState.userTags.isNotEmpty ?
+        searchState.userTags.map((e) => e.name).toList() : null
+    };
 
-    print(searchState.mainTag);
-    if (searchState.mainTag != null) {
-      query = query.eq("primary_tag", searchState.mainTag!.name);
-    }
-
-    if (searchState.userTags.isNotEmpty) {
-      query = query.contains("tag(name)", searchState.userTags.map((e) => e.name));
-    }
+    var query = supabase.rpc(
+      "get_products_by_search",
+      params: queryParams
+    );
 
     try {
-      PostgrestList response = await query;
-      List<Product> products = (response as List<dynamic>)
+      List<dynamic> response = await query;
+      List<Product> products = response
         .map((item) => Product.fromJson(item))
         .toList();
 
       state = products;
     } catch(error) {
       debugPrint("Error fetching products: $error");
+      debugPrintStack();
     }
   }
 }
