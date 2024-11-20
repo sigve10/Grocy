@@ -1,6 +1,7 @@
 class Rating {
   final String userId;
   final String productEan;
+  String? content;
   double? customerSatisfactionRating;
   double? labelAccuracyRating;
   double? priceRating;
@@ -8,7 +9,7 @@ class Rating {
 
   Rating({
     required this.userId,
-    required this.productEan
+    required this.productEan, this.content
   });
 
   /// Get the weak key of this rating
@@ -58,6 +59,7 @@ class Rating {
     return Rating(
       userId: json['user_id'] ?? '',
       productEan: json['product_ean'] ?? '',
+      content: json['content'] ?? ''
     )
     // Use cascade operator to assign values after the creation of the rating object.
     // Need to use it as constructor only initializes the "keys", not the ratings.
