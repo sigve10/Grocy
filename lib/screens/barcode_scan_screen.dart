@@ -48,8 +48,6 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen>
         headers: {"Content-Type": "application/json"},
         method: HttpMethod.post);
 
-    print(res.data); //temp logging
-
     if (res.status == 200 && res.data != null) {
       final productJson = res.data as Map<String, dynamic>;
       Product product = Product.fromJson(productJson);
@@ -65,6 +63,8 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen>
           builder: (context) => ProductScreen(product: product),
         ),
       );
+    } else {
+      print("Error: " + res.data);
     }
   }
 
