@@ -175,7 +175,7 @@ Future<void> _handleAuth() async {
               child: Text(
                 _isLoading
                     ? 'Please wait...'
-                    : (_isRegistered ? 'Create an account' : 'Sign in'),
+                    : (_isRegistered ? 'Submit' : 'Sign in'),
               ),
             ),
             // My magnificent solution for margin / gap.
@@ -191,7 +191,7 @@ Future<void> _handleAuth() async {
                 });
               },
               child: Text(
-                _isRegistered ? 'Back to Sign In' : 'Submit',
+                _isRegistered ? 'Back to Sign In' : 'Create Account',
                 style: const TextStyle(fontSize: 18),
               ),
             ),
