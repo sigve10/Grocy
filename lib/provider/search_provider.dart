@@ -1,15 +1,24 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:grocy/models/tag.dart';
 
-class SearchNotifier extends StateNotifier<SearchState> {
-  SearchNotifier() : super(const SearchState());
+final searchProvider = StateNotifierProvider<SearchProvider, SearchState>(
+  (ref) => SearchProvider()
+);
+
+class SearchProvider extends StateNotifier<SearchState> {
+  SearchProvider() : super(const SearchState());
 
   void setSearchTerm(String newTerm) {
     state = state.copyWith(searchText: newTerm);
   }
 
-  void setMainTag(Tag newTag) {
-    state = state.copyWith(mainTag: newTag);
+  void setMainTag(Tag? newTag) {
+    if (newTag == null) {
+      state = state.copyWithoutPrimaryTag();
+    } else {
+      state = state.copyWith(mainTag: newTag);
+    }
+
   }
 
   void addUserTag(Tag tagToAdd) {
@@ -54,6 +63,18 @@ class SearchState {
     return SearchState(
       searchText: searchText ?? this.searchText,
       mainTag: mainTag ?? this.mainTag,
+      userTags: userTags ?? this.userTags
+    );
+  }
+
+  // This function is needed because maintag is nullable
+  SearchState copyWithoutPrimaryTag({
+    String? searchText,
+    Set<Tag>? userTags
+  }) {
+    return SearchState(
+      searchText: searchText ?? this.searchText,
+      mainTag: null,
       userTags: userTags ?? this.userTags
     );
   }
