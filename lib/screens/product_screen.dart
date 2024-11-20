@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:grocy/models/product.dart';
 import 'package:grocy/models/rating.dart';
-
+import '../manager/wishlist_manager.dart';
 import 'leave_review_screen.dart';
 
 /// The screen that displays the details of a product.
@@ -24,24 +24,20 @@ class _StarRatingUtil {
     const Color starColor = Colors.amber;
 
     const Icon fullStar = Icon(Icons.star, size: starSize, color: starColor);
-    const Icon halfStar = Icon(Icons.star_half, size: starSize, color: starColor);
-    const Icon noStar = Icon(Icons.star_border, size: starSize, color: starColor);
+    const Icon halfStar =
+        Icon(Icons.star_half, size: starSize, color: starColor);
+    const Icon noStar =
+        Icon(Icons.star_border, size: starSize, color: starColor);
 
     int fullStars = stars.floor();
     bool hasHalfStar = stars - (fullStars as double) >= 0.5;
     int noStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        for (int i = 0; i < fullStars; i++)
-          fullStar,
-        if (hasHalfStar)
-          halfStar,
-        for (int i = 0; i < noStars; i++)
-          noStar
-      ]
-    );
+    return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+      for (int i = 0; i < fullStars; i++) fullStar,
+      if (hasHalfStar) halfStar,
+      for (int i = 0; i < noStars; i++) noStar
+    ]);
   }
 }
 
@@ -49,10 +45,12 @@ class _ProductScreenState extends State<ProductScreen> {
   List<Product> filteredProducts = [];
   late _Rating productRating;
   bool isExpanded = false;
+  bool isFavorite = false;
 
   @override
   void initState() {
     super.initState();
+    isFavorite = _isInWishlist(widget.product);
     filteredProducts = [widget.product];
     productRating = _Rating(
       customerSatisfaction: 4.5,
@@ -62,6 +60,31 @@ class _ProductScreenState extends State<ProductScreen> {
     );
   }
 
+  /// to check if the product is in the wishlist
+  bool _isInWishlist(Product product) {
+    return WishlistManager().isInWishlist(product);
+  }
+
+  /// add or removes a product from the wishlist
+  void _toggleWishlist() {
+    setState(() {
+      if (_isInWishlist(widget.product)) {
+        WishlistManager().removeFromWishlist(widget.product);
+        isFavorite = false;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Removed from wishlist')),
+        );
+      } else {
+        WishlistManager().addToWishlist(widget.product);
+        isFavorite = true;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Added to wishlist')),
+        );
+      }
+    });
+  }
+
+/// filter the products based on the query
   void _filterProducts(String query) {
     setState(() {
       filteredProducts = [widget.product]
@@ -71,6 +94,7 @@ class _ProductScreenState extends State<ProductScreen> {
     });
   }
 
+  /// Handle tag selection from SearchWidget.
   @override
   Widget build(BuildContext context) {
     final ratings = [
@@ -105,12 +129,29 @@ class _ProductScreenState extends State<ProductScreen> {
             // Product Description
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: Text(
-                widget.product.name,
-                style: Theme.of(context).textTheme.titleLarge!.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.bold,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.product.name,
+                      style: Theme.of(context).textTheme.titleLarge!.copyWith(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
                     ),
+                  ),
+                  /// Add to wishlist button
+                  IconButton(
+                    icon: Icon(
+                      isFavorite ? Icons.favorite : Icons.favorite_border,
+                      color: isFavorite ? Colors.red : Colors.grey.shade400,
+                      semanticLabel: isFavorite
+                          ? 'Remove from wishlist'
+                          : 'Add to wishlist',
+                    ),
+                    onPressed: _toggleWishlist,
+                  ),
+                ],
               ),
             ),
 
@@ -129,13 +170,12 @@ class _ProductScreenState extends State<ProductScreen> {
               thickness: 0.5,
             ),
 
-            RatingsSection(rating: 
-              Rating(productEan: "", userId: "")
-                ..customerSatisfactionRating = 5
-                ..labelAccuracyRating = 4.5
-                ..priceRating = 2.5
-                ..consistencyRating = 1
-            ),
+            RatingsSection(
+                rating: Rating(productEan: "", userId: "")
+                  ..customerSatisfactionRating = 5
+                  ..labelAccuracyRating = 4.5
+                  ..priceRating = 2.5
+                  ..consistencyRating = 1),
 
             const SizedBox(height: 24),
 
@@ -174,6 +214,7 @@ class _ProductScreenState extends State<ProductScreen> {
   }
 }
 
+/// A section that displays the ratings of a product.
 class RatingsSection extends StatelessWidget {
   final Rating rating;
 
@@ -183,17 +224,17 @@ class RatingsSection extends StatelessWidget {
     final List<Widget> retval = [];
 
     for (Map<String, dynamic> currentRating in rating.displayable) {
-      retval.add(
-        Card.filled(
+      retval.add(Card.filled(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(currentRating["label"], textAlign: TextAlign.center,),
-              _StarRatingUtil.getStarRating(currentRating["value"] as double)
-            ],
-          )
-        )
-      );
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            currentRating["label"],
+            textAlign: TextAlign.center,
+          ),
+          _StarRatingUtil.getStarRating(currentRating["value"] as double)
+        ],
+      )));
     }
 
     return retval;
@@ -202,49 +243,45 @@ class RatingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "Ratings",
-            style: Theme.of(context).textTheme.titleMedium!.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,)
-          ),
-          const SizedBox(height: 24.0),
-          GridView(
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 4,
-              mainAxisSpacing: 4,
-              // Why are flutter grid this awful?
-              mainAxisExtent: 94
-            ),
-            physics: const NeverScrollableScrollPhysics(),
-            shrinkWrap: true,
-            children: createRatings()
-          ),
-          const SizedBox(height: 16.0),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              FilledButton(
-                onPressed: () {
+        padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text("Ratings",
+                style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    )),
+            const SizedBox(height: 24.0),
+            GridView(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 4,
+                    mainAxisSpacing: 4,
+                    // Why are flutter grid this awful?
+                    mainAxisExtent: 94),
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                children: createRatings()),
+            const SizedBox(height: 16.0),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FilledButton(
+                  onPressed: () {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => const LeaveReviewScreen(),
                       ),
                     );
-                },
-                child: const Text("Leave a Review"),
-              ),
-            ],
-          )
-        ],
-      )
-    );
+                  },
+                  child: const Text("Leave a Review"),
+                ),
+              ],
+            )
+          ],
+        ));
   }
 }
 
@@ -255,18 +292,14 @@ class Review extends StatefulWidget {
   State<StatefulWidget> createState() => ReviewState();
 }
 
-
-
 class ReviewState extends State<Review> {
   static const maxReviewLines = 2;
 
   final String reviewerName = "Mats Bakketeig";
-  final String reviewContent = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur malesuada, lacus scelerisque dapibus consequat, metus dolor euismod elit, vitae auctor massa urna eu urna. Proin porttitor feugiat rhoncus. Aliquam et erat sed est molestie porttitor suscipit quis lorem. Proin aliquet pharetra urna in sodales. Aenean eget ornare leo. Praesent non sapien porttitor lorem imperdiet bibendum. Morbi leo quam, venenatis vitae justo id, malesuada sollicitudin elit. Maecenas accumsan elit sit amet ligula tristique, quis feugiat sem consectetur. Nulla id ex ante. Sed condimentum diam scelerisque, interdum erat eu, tempor mauris.";
+  final String reviewContent =
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur malesuada, lacus scelerisque dapibus consequat, metus dolor euismod elit, vitae auctor massa urna eu urna. Proin porttitor feugiat rhoncus. Aliquam et erat sed est molestie porttitor suscipit quis lorem. Proin aliquet pharetra urna in sodales. Aenean eget ornare leo. Praesent non sapien porttitor lorem imperdiet bibendum. Morbi leo quam, venenatis vitae justo id, malesuada sollicitudin elit. Maecenas accumsan elit sit amet ligula tristique, quis feugiat sem consectetur. Nulla id ex ante. Sed condimentum diam scelerisque, interdum erat eu, tempor mauris.";
   final String reviewPfp = "";
-  final Rating rating = Rating(
-    productEan: "",
-    userId: ""
-  )
+  final Rating rating = Rating(productEan: "", userId: "")
     ..customerSatisfactionRating = 5
     ..labelAccuracyRating = 4.5
     ..priceRating = 3.5
@@ -278,91 +311,79 @@ class ReviewState extends State<Review> {
   @override
   Widget build(BuildContext context) {
     return Card.outlined(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-        child: Column(
+        child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
+      child: Column(children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            const CircleAvatar(child: Icon(Icons.account_circle)),
+            const SizedBox(width: 24),
+            Expanded(
+                child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const CircleAvatar(child: Icon(Icons.account_circle)),
-                const SizedBox(width: 24),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(reviewerName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      // This allows us to check if the review exceeds X lines
-                      LayoutBuilder(builder: (context, constraints) {
-                        final textPaint = TextPainter(
-                          text: TextSpan(
-                            text: reviewContent
-                          ),
-                          maxLines: maxReviewLines,
-                          textDirection: TextDirection.ltr
-                        )..layout(maxWidth: constraints.maxWidth);
+                Text(reviewerName,
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                // This allows us to check if the review exceeds X lines
+                LayoutBuilder(builder: (context, constraints) {
+                  final textPaint = TextPainter(
+                      text: TextSpan(text: reviewContent),
+                      maxLines: maxReviewLines,
+                      textDirection: TextDirection.ltr)
+                    ..layout(maxWidth: constraints.maxWidth);
 
-                        isOverflowing = textPaint.didExceedMaxLines;
+                  isOverflowing = textPaint.didExceedMaxLines;
 
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              reviewContent,
-                              maxLines: isExpanded ? null : maxReviewLines,
-                              overflow: isExpanded
+                  return Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(reviewContent,
+                            maxLines: isExpanded ? null : maxReviewLines,
+                            overflow: isExpanded
                                 ? TextOverflow.visible
-                                : TextOverflow.ellipsis
-                            ),
-                          ]
-                        );
-                      })
-                    ],
-                  )
-                )
+                                : TextOverflow.ellipsis),
+                      ]);
+                })
               ],
-            ),
-            if (isExpanded)
-              const SizedBox(height: 8.0),
-            if (isExpanded)
-              GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            ))
+          ],
+        ),
+        if (isExpanded) const SizedBox(height: 8.0),
+        if (isExpanded)
+          GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
                   crossAxisSpacing: 4,
                   mainAxisSpacing: 4,
-                  childAspectRatio: 2.8
-                ),
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: rating.displayable.length,
-                itemBuilder: (context, index) {
-                  final currentRating = rating.displayable[index];
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(currentRating["label"]),
-                      _StarRatingUtil.getStarRating(currentRating["value"] as double)
-                    ],
-                  );
-                }
-              ),
-            Row(
-              children: [
-                if (!isExpanded)
-                  _StarRatingUtil.getStarRating(rating.averageRating),
-                const Spacer(),
-                TextButton(
-                  onPressed: () => setState(() => isExpanded = !isExpanded),
-                  child: Text(isExpanded ? "Show less" : "Show more")
-                )
-              ],
-            )
-          ]
-        ),
-      )
-    );
+                  childAspectRatio: 2.8),
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: rating.displayable.length,
+              itemBuilder: (context, index) {
+                final currentRating = rating.displayable[index];
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(currentRating["label"]),
+                    _StarRatingUtil.getStarRating(
+                        currentRating["value"] as double)
+                  ],
+                );
+              }),
+        Row(
+          children: [
+            if (!isExpanded)
+              _StarRatingUtil.getStarRating(rating.averageRating),
+            const Spacer(),
+            TextButton(
+                onPressed: () => setState(() => isExpanded = !isExpanded),
+                child: Text(isExpanded ? "Show less" : "Show more"))
+          ],
+        )
+      ]),
+    ));
   }
-
 }
 
 class ReviewCategory extends StatelessWidget {
@@ -377,10 +398,7 @@ class ReviewCategory extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(title),
-          _StarRatingUtil.getStarRating(rating)
-        ],
+        children: [Text(title), _StarRatingUtil.getStarRating(rating)],
       ),
     );
   }
