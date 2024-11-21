@@ -84,22 +84,15 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
         'the userId is $userId and does this work ? the user.id? ${user.id}');
 
     try {
-
       // Delete the specific review that matches both user and product.
-      final response = await supabase
+      await supabase
           .from('reviews')
           .delete()
           .match({'user_id': userId, 'product_ean': rating.productEan});
-
-      if (response.error != null) {
-        debugPrint('Error deleting review: ${response.error!.message}');
-        throw Exception('Failed to update review: ${response.error!.message}'); // temporary
-      }
     } catch (error) {
       debugPrint('Errow deleting review: $error');
     }
   }
-  
 
   /// Updates a review in the database.
   void updateReview(Rating updatedRating) async {
