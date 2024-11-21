@@ -12,7 +12,7 @@ final wishlistNotifier =
 class WishlistProvider extends StateNotifier<List<Product>> {
   WishlistProvider() : super([]);
 
-  // Fetches all wishlist entries in  the database.
+  /// Fetches all wishlist entries in the database.
   Future<void> fetchWishlist() async {
     // Grabs the user via supabase's auth get user method.
     final user = supabase.auth.currentUser;
@@ -75,17 +75,11 @@ class WishlistProvider extends StateNotifier<List<Product>> {
     }
 
     try {
-      final response = await supabase
+      await supabase
           .from('wishlist')
           .delete()
           .match({'user_id': user.id, 'product_ean': product.ean});
 
-      if (response.isNotEmpty) {
-        debugPrint('product removed from wishlist: ${product.name}');
-      } else {
-        debugPrint(
-            'Was unable to remove the product from wishlist: ${product.name}');
-      }
     } catch (error) {
       debugPrint('Was unable to delete product from wishlist: $error');
     }
