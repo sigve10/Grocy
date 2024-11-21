@@ -34,7 +34,7 @@ Future<void> _handleAuth() async {
     _isLoading = true;
   });
 
-  final email = _emailController.text.trim();
+  final email = _emailController.text.trim().toLowerCase();
   // Because the message should never be null, I am not using String? here.
   String message = '';
 
@@ -43,7 +43,7 @@ Future<void> _handleAuth() async {
     final response = await supabase
         .from('profiles')
         .select('email')
-        .eq('email', email)
+        .ilike('email', email)
         .maybeSingle();
 
     if (response != null && _isRegistered) {
