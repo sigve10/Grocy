@@ -84,7 +84,6 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
         'the userId is $userId and does this work ? the user.id? ${user.id}');
 
     try {
-      debugPrint('Prøver å slette dritt her');
 
       // Delete the specific review that matches both user and product.
       final response = await supabase
@@ -94,7 +93,7 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
 
       if (response.error != null) {
         debugPrint('Error deleting review: ${response.error!.message}');
-        return;
+        throw Exception('Failed to update review: ${response.error!.message}'); // temporary
       }
     } catch (error) {
       debugPrint('Errow deleting review: $error');
