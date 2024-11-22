@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 /// Snackbar extension, which shows snack bars in the app.
-/// Used for the account & login page, so far.
 extension ContextExtension on BuildContext {
   void showSnackBar(String message, {bool isError = false}) {
     ScaffoldMessenger.of(this).clearSnackBars();
