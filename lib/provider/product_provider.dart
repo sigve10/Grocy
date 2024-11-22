@@ -21,6 +21,22 @@ class ProductProvider extends StateNotifier<List<Product>> {
     });
   }
 
+  Future<Product> fetchProduct(String barcode, context) async {
+    final res = await supabase.functions.invoke("fetch-product",
+        body: {"ean": barcode},
+        headers: {"Content-Type": "application/json"},
+        method: HttpMethod.post);
+
+    final productJson = res.data as Map<String, dynamic>;
+    Product product = Product.fromJson(productJson);
+
+    if (product.ean.isEmpty) {
+      throw FunctionException(status: 404, details: {"error": "Product not found"});
+    }
+
+    return product;
+  }
+
   void addProduct(Product product) async {
     await supabase.from('products').insert({
       'ean': product.ean,
