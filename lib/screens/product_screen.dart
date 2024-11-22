@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:grocy/models/product.dart';
 import 'package:grocy/models/rating.dart';
-import '../manager/wishlist_manager.dart';
 import '../models/tag.dart';
 import '../provider/product_provider.dart';
 import '../provider/tag_provider.dart';
 import '../widget/tag_search_widget.dart';
+import 'package:grocy/provider/wishlist_provider.dart';
 import 'leave_review_screen.dart';
 
 /// The screen that displays the details of a product.
@@ -32,7 +32,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
   @override
   void initState() {
     super.initState();
-    isFavorite = _isInWishlist(widget.product);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _updateIsFavorite(widget.product));
     filteredProducts = [widget.product];
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(primaryTagProvider.notifier).fetchPrimaryTags();
@@ -46,26 +46,28 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
   }
 
   /// to check if the product is in the wishlist
-  bool _isInWishlist(Product product) {
-    return WishlistManager().isInWishlist(product);
+  void _updateIsFavorite(Product product) async {
+    WishlistProvider wishlistProvider = ref.read(wishlistNotifier.notifier);
+    bool whatIsFavoriteState = await wishlistProvider.isWishlisted(product);
+    setState(() => isFavorite = whatIsFavoriteState);
   }
 
   /// add or removes a product from the wishlist
   void _toggleWishlist() {
     setState(() {
-      if (_isInWishlist(widget.product)) {
-        WishlistManager().removeFromWishlist(widget.product);
-        isFavorite = false;
+      WishlistProvider wishlistProvider = ref.read(wishlistNotifier.notifier);
+      if (isFavorite) {
+        wishlistProvider.deleteProductFromWishlist(widget.product);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Removed from wishlist')),
         );
       } else {
-        WishlistManager().addToWishlist(widget.product);
-        isFavorite = true;
+        wishlistProvider.addProductToWishlist(widget.product);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Added to wishlist')),
         );
       }
+      isFavorite = !isFavorite;
     });
   }
 
@@ -244,11 +246,12 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
             ),
 
             RatingsSection(
-                rating: Rating(productEan: "", userId: "")
-                  ..customerSatisfactionRating = 5
-                  ..labelAccuracyRating = 4.5
-                  ..priceRating = 2.5
-                  ..consistencyRating = 1),
+              product: widget.product,
+              rating: Rating(productEan: "", userId: "")
+                ..customerSatisfactionRating = 5
+                ..labelAccuracyRating = 4.5
+                ..priceRating = 2.5
+                ..consistencyRating = 1),
 
             const SizedBox(height: 24),
 
@@ -290,8 +293,9 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
 /// A section that displays the ratings of a product.
 class RatingsSection extends StatelessWidget {
   final Rating rating;
+  final Product product;
 
-  const RatingsSection({super.key, required this.rating});
+  const RatingsSection({super.key, required this.rating, required this.product});
 
   List<Widget> createRatings() {
     final List<Widget> retval = [];
@@ -344,7 +348,7 @@ class RatingsSection extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const LeaveReviewScreen(),
+                        builder: (context) => LeaveReviewScreen(product: product),
                       ),
                     );
                   },

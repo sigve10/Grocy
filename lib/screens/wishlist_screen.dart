@@ -1,19 +1,27 @@
 import 'package:flutter/material.dart';
-import '../manager/wishlist_manager.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:grocy/provider/wishlist_provider.dart';
 import '../models/product.dart';
 import '../widget/wishlist_item.dart';
 
-class WishlistScreen extends StatefulWidget {
+class WishlistScreen extends ConsumerStatefulWidget {
   const WishlistScreen({super.key});
 
   @override
   WishlistScreenState createState() => WishlistScreenState();
 }
 
-class WishlistScreenState extends State<WishlistScreen> {
+class WishlistScreenState extends ConsumerState<WishlistScreen> {
+  @override
+  void initState() {
+    ref.read(wishlistNotifier.notifier).fetchWishlist();
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
-    List<Product> wishlist = WishlistManager().wishlist;
+    WishlistProvider wishlistProvider = ref.watch(wishlistNotifier.notifier);
+    List<Product> wishlist = ref.watch(wishlistNotifier);
 
     return Scaffold(
       appBar: AppBar(
@@ -26,16 +34,14 @@ class WishlistScreenState extends State<WishlistScreen> {
               itemCount: wishlist.length,
               itemBuilder: (context, index) {
                 final product = wishlist[index];
-                final isFavorite = WishlistManager().isInWishlist(product);
                 return WishlistItem(
                   product: product,
-                  isFavorite: isFavorite,
+                  isFavorite: true,
                   onToggleWishlist: () {
-                    if (!isFavorite) {
-                      _toggleWishlist(product);
-                    } else {
-                      _showRemoveConfirmationDialog(product);
-                    }
+                    _showRemoveConfirmationDialog(
+                      product,
+                      () => wishlistProvider.deleteProductFromWishlist(product)
+                    );
                   },
                 );
               },
@@ -46,17 +52,7 @@ class WishlistScreenState extends State<WishlistScreen> {
     );
   }
 
-  void _toggleWishlist(Product product) {
-    setState(() {
-      if (WishlistManager().isInWishlist(product)) {
-        WishlistManager().removeFromWishlist(product);
-      } else {
-        WishlistManager().addToWishlist(product);
-      }
-    });
-  }
-
-  void _showRemoveConfirmationDialog(Product product) {
+  void _showRemoveConfirmationDialog(Product product, Function() onConfirm) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -75,7 +71,7 @@ class WishlistScreenState extends State<WishlistScreen> {
               child: const Text('Remove'),
               onPressed: () {
                 Navigator.of(context).pop();
-                _toggleWishlist(product);
+                onConfirm();
               },
             ),
           ],

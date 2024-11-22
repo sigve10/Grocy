@@ -43,6 +43,29 @@ class WishlistProvider extends StateNotifier<List<Product>> {
     }
   }
 
+  Future<bool> isWishlisted(Product product) async {
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      throw Exception('User needs to be logged in');
+    }
+
+    bool isProductInWishlist = false;
+
+    final query = supabase.from("wishlist")
+        .select()
+        .eq("product_ean", product.ean)
+        .count();
+
+    try {
+      final result = await query;
+      isProductInWishlist = result.count > 0;
+    } catch (error) {
+      debugPrint('Error fetching the wishlist from the database: $error');
+    }
+
+    return isProductInWishlist;
+  }
+
   /// Adds a product to the wishlist in the database.
   void addProductToWishlist(Product product) async {
     final user = supabase.auth.currentUser;
@@ -64,6 +87,8 @@ class WishlistProvider extends StateNotifier<List<Product>> {
     } catch (error) {
       debugPrint('Was unable to add the product: $product to wishlist: $error');
     }
+
+    fetchWishlist();
   }
 
   /// Deletes a product from an authenticated user's wishlist in the database.
@@ -83,6 +108,8 @@ class WishlistProvider extends StateNotifier<List<Product>> {
     } catch (error) {
       debugPrint('Was unable to delete product from wishlist: $error');
     }
+
+    fetchWishlist();
   }
 
 }

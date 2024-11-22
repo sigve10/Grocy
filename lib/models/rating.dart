@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class Rating {
-  final String userId;
+  String userId;
   final String productEan;
   String? content;
   double? customerSatisfactionRating;
@@ -11,8 +11,8 @@ class Rating {
   double? consistencyRating;
 
   Rating({
-    required this.userId,
-    required this.productEan, this.content
+    required this.productEan, this.content,
+    this.userId = "",
   });
 
   /// Get the weak key of this rating
