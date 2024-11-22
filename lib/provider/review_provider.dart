@@ -13,7 +13,7 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
   ReviewProvider() : super([]);
 
   /// Default fetch that fetches all the reviews from the database.
-  Future<List<Rating>> fetchReviews(Iterable<String> eans) async {
+  Future<List<Rating>> fetchRatings(Iterable<String> eans) async {
     late final List<Rating> reviews;
 
     final query = supabase.from('reviews')
@@ -25,6 +25,30 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
       reviews = (response as List<dynamic>)
           .map((item) => Rating.fromJson(item as Map<String, dynamic>))
           .toList();
+    } catch (error) {
+      debugPrint('Error fetch reviews from the reviews table, $error');
+    }
+
+    return reviews;
+  }
+
+  Future<List<Rating>> fetchReviews(String ean) async {
+    late final List<Rating> reviews;
+    print("Just give me the fricking exe");
+
+    final query = supabase
+      .from("reviews")
+      .select()
+      .eq("product_ean", ean)
+      .not("content", "is", null);
+
+    try {
+      final response = await query;
+      print("Response: $response");
+      reviews = (response as List<dynamic>)
+          .map((item) => Rating.fromJson(item as Map<String, dynamic>))
+          .toList();
+      print("Reviews: $reviews");
     } catch (error) {
       debugPrint('Error fetch reviews from the reviews table, $error');
     }

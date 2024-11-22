@@ -13,20 +13,17 @@ class UserProvider extends StateNotifier<Map<String, dynamic>> {
 
   /// Fetches the current user's profile from Supabase.
   /// Returns the profile data or `null` if the user is not signed in.
-  Future<Map<String, dynamic>?> fetchProfile() async {
-    final user = supabase.auth.currentUser;
+  Future<Map<String, dynamic>?> fetchProfile(String userId) async {
+    print("Getting profile!");
 
-    if (user == null) {
-      throw Exception('User is not signed in.');
-    }
-    final userId = user.id;
+    final query = supabase.from('profiles')
+      .select()
+      .eq('id', userId)
+      .single();
     try {
-      final data =
-          await supabase.from('profiles').select().eq('id', userId).single();
-
-      state = data;
-
-      return state;
+      final data = await query;
+      print("Testing: $data");
+      return data;
     } on PostgrestException catch (error) {
       debugPrint('Error fetching profile: ${error.message}');
       return null;
@@ -35,6 +32,7 @@ class UserProvider extends StateNotifier<Map<String, dynamic>> {
       return null;
     }
   }
+
 
   /// Checks if the username is empty or not
   /// If it returns true then the username is not empty

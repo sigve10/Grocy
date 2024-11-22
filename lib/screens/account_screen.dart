@@ -34,8 +34,13 @@ class _AccountPageState extends ConsumerState<AccountPage> {
       _loading = true;
     });
 
+    final user = supabase.auth.currentUser;
+
+    if (user == null) {
+      throw Exception('User is not signed in.');
+    }
     final userProvider = ref.read(userNotifier.notifier);
-    final profile = await userProvider.fetchProfile();
+    final profile = await userProvider.fetchProfile(user.id);
 
     if (profile == null) {
       if (mounted) {

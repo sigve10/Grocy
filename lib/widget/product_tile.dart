@@ -77,7 +77,7 @@ class ProductTile extends ConsumerWidget {
                   ),
                   const SizedBox(height: 4.0),
                   FutureBuilder(
-                    future: reviewProvider.fetchReviews([product.ean]),
+                    future: reviewProvider.fetchRatings([product.ean]),
                     builder: (context, AsyncSnapshot snapshot) {
                       if (!snapshot.hasData) {
                         return Row(children: [

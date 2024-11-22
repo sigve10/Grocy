@@ -74,15 +74,13 @@ class Rating {
       ..consistencyRating = (json['consistency'] as num?)?.toDouble();
   }
 
-  static Widget getStarRating(double stars) {
+  static Widget getStarRating(double stars, {Color? color}) {
     const double starSize = 20;
-    const Color starColor = Colors.amber;
+    Color starColor = color ?? Colors.amber;
 
-    const Icon fullStar = Icon(Icons.star, size: starSize, color: starColor);
-    const Icon halfStar =
-    Icon(Icons.star_half, size: starSize, color: starColor);
-    const Icon noStar =
-    Icon(Icons.star_border, size: starSize, color: starColor);
+    Icon fullStar = Icon(Icons.star, size: starSize, color: starColor);
+    Icon halfStar = Icon(Icons.star_half, size: starSize, color: starColor);
+    Icon noStar = Icon(Icons.star_border, size: starSize, color: starColor);
 
     int fullStars = stars.floor();
     bool hasHalfStar = stars - (fullStars as double) >= 0.5;

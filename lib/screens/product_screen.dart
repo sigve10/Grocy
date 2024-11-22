@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:grocy/models/product.dart';
 import 'package:grocy/models/rating.dart';
+import 'package:grocy/provider/review_provider.dart';
+import 'package:grocy/provider/user_provider.dart';
 import '../models/tag.dart';
 import '../provider/product_provider.dart';
 import '../provider/tag_provider.dart';
@@ -28,20 +30,32 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
   bool isExpanded = false;
   bool isFavorite = false;
   List<Tag> tags = [];
+  List<Rating> reviews = [];
 
   @override
   void initState() {
+    getReviews();
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _updateIsFavorite(widget.product));
+    WidgetsBinding.instance
+        .addPostFrameCallback((_) => _updateIsFavorite(widget.product));
     filteredProducts = [widget.product];
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(primaryTagProvider.notifier).fetchPrimaryTags();
     });
-    ref.read(productProvider.notifier).fetchTagsForProduct(widget.product.ean).
-    then((fetchedTags) {
+    ref
+        .read(productProvider.notifier)
+        .fetchTagsForProduct(widget.product.ean)
+        .then((fetchedTags) {
       setState(() {
         tags = fetchedTags;
       });
+    });
+  }
+
+  void getReviews() async {
+    final statelessReviews = await ref.read(reviewNotifier.notifier).fetchReviews(widget.product.ean);
+    setState(() {
+      reviews = statelessReviews;
     });
   }
 
@@ -121,7 +135,9 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
 
   void _addUserTag(Tag tag) async {
     // Fetch updated product data using productProvider
-    final updatedTags = await ref.read(productProvider.notifier).fetchTagsForProduct(widget.product.ean);
+    final updatedTags = await ref
+        .read(productProvider.notifier)
+        .fetchTagsForProduct(widget.product.ean);
 
     // Update the UI
     setState(() {
@@ -171,6 +187,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                           ),
                     ),
                   ),
+
                   /// Add to wishlist button
                   IconButton(
                     icon: Icon(
@@ -210,7 +227,8 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
             // Product Tags
             Padding(
               padding: const EdgeInsets.all(16.0),
-              child: widget.product.primaryTag != null && widget.product.primaryTag!.isNotEmpty
+              child: widget.product.primaryTag != null &&
+                      widget.product.primaryTag!.isNotEmpty
                   ? Chip(label: Text(widget.product.primaryTag!))
                   : const Text("No tag available"),
             ),
@@ -219,26 +237,25 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: FutureBuilder(
-                future: productNotifier.fetchTagsForProduct(widget.product.ean),
-                builder: (context, AsyncSnapshot snapshot) {
-                  if (!snapshot.hasData) {
-                    return CircularProgressIndicator();
-                  }
-                  List<Tag> data = snapshot.data as List<Tag>;
-                  return data.isNotEmpty
-                      ? Wrap(
-                    spacing: 8.0,
-                    children: data.map((tag) {
-                      return Chip(
-                        label: Text(tag.name),
-                      );
-                    }).toList(),
-                  )
-                      : const Text("No user tags available");
-                }
-              ),
+                  future:
+                      productNotifier.fetchTagsForProduct(widget.product.ean),
+                  builder: (context, AsyncSnapshot snapshot) {
+                    if (!snapshot.hasData) {
+                      return CircularProgressIndicator();
+                    }
+                    List<Tag> data = snapshot.data as List<Tag>;
+                    return data.isNotEmpty
+                        ? Wrap(
+                            spacing: 8.0,
+                            children: data.map((tag) {
+                              return Chip(
+                                label: Text(tag.name),
+                              );
+                            }).toList(),
+                          )
+                        : const Text("No user tags available");
+                  }),
             ),
-
 
             Divider(
               color: Theme.of(context).colorScheme.primary,
@@ -246,12 +263,12 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
             ),
 
             RatingsSection(
-              product: widget.product,
-              rating: Rating(productEan: "", userId: "")
-                ..customerSatisfactionRating = 5
-                ..labelAccuracyRating = 4.5
-                ..priceRating = 2.5
-                ..consistencyRating = 1),
+                product: widget.product,
+                rating: Rating(productEan: "", userId: "")
+                  ..customerSatisfactionRating = 5
+                  ..labelAccuracyRating = 4.5
+                  ..priceRating = 2.5
+                  ..consistencyRating = 1),
 
             const SizedBox(height: 24),
 
@@ -273,15 +290,15 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
             ),
 
             // Review list with expandable
-            ListView.builder(
+            ListView(
               padding:
                   const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: 2,
-              itemBuilder: (context, index) {
-                return const Review();
-              },
+              children: [
+                for (Rating rating in reviews)
+                  Review(rating: rating)
+              ],
             )
           ],
         ),
@@ -295,7 +312,8 @@ class RatingsSection extends StatelessWidget {
   final Rating rating;
   final Product product;
 
-  const RatingsSection({super.key, required this.rating, required this.product});
+  const RatingsSection(
+      {super.key, required this.rating, required this.product});
 
   List<Widget> createRatings() {
     final List<Widget> retval = [];
@@ -348,7 +366,8 @@ class RatingsSection extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => LeaveReviewScreen(product: product),
+                        builder: (context) =>
+                            LeaveReviewScreen(product: product),
                       ),
                     );
                   },
@@ -361,28 +380,38 @@ class RatingsSection extends StatelessWidget {
   }
 }
 
-class Review extends StatefulWidget {
-  const Review({super.key});
+class Review extends ConsumerStatefulWidget {
+  final Rating rating;
+  const Review({required this.rating, super.key});
 
   @override
-  State<StatefulWidget> createState() => ReviewState();
+  ConsumerState<ConsumerStatefulWidget> createState() => ReviewState();
 }
 
-class ReviewState extends State<Review> {
+class ReviewState extends ConsumerState<Review> {
   static const maxReviewLines = 2;
+  late final UserProvider userProvider;
 
-  final String reviewerName = "Mats Bakketeig";
-  final String reviewContent =
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur malesuada, lacus scelerisque dapibus consequat, metus dolor euismod elit, vitae auctor massa urna eu urna. Proin porttitor feugiat rhoncus. Aliquam et erat sed est molestie porttitor suscipit quis lorem. Proin aliquet pharetra urna in sodales. Aenean eget ornare leo. Praesent non sapien porttitor lorem imperdiet bibendum. Morbi leo quam, venenatis vitae justo id, malesuada sollicitudin elit. Maecenas accumsan elit sit amet ligula tristique, quis feugiat sem consectetur. Nulla id ex ante. Sed condimentum diam scelerisque, interdum erat eu, tempor mauris.";
-  final String reviewPfp = "";
-  final Rating rating = Rating(productEan: "", userId: "")
-    ..customerSatisfactionRating = 5
-    ..labelAccuracyRating = 4.5
-    ..priceRating = 3.5
-    ..consistencyRating = 1;
+  String reviewerName = "";
 
   bool isExpanded = false;
   bool isOverflowing = false;
+  bool isLoading = true;
+
+  void setupReviewData() async {
+    final poster = await userProvider.fetchProfile(widget.rating.userId);
+    setState(() {
+      reviewerName = poster!["username"];
+      isLoading = false;
+    });
+  }
+
+  @override
+  void initState() {
+    userProvider = ref.read(userNotifier.notifier);
+    setupReviewData();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -404,7 +433,7 @@ class ReviewState extends State<Review> {
                 // This allows us to check if the review exceeds X lines
                 LayoutBuilder(builder: (context, constraints) {
                   final textPaint = TextPainter(
-                      text: TextSpan(text: reviewContent),
+                      text: TextSpan(text: widget.rating.content!),
                       maxLines: maxReviewLines,
                       textDirection: TextDirection.ltr)
                     ..layout(maxWidth: constraints.maxWidth);
@@ -414,7 +443,7 @@ class ReviewState extends State<Review> {
                   return Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text(reviewContent,
+                        Text(widget.rating.content!,
                             maxLines: isExpanded ? null : maxReviewLines,
                             overflow: isExpanded
                                 ? TextOverflow.visible
@@ -435,22 +464,22 @@ class ReviewState extends State<Review> {
                   childAspectRatio: 2.8),
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: rating.displayable.length,
+              itemCount: widget.rating.displayable.length,
               itemBuilder: (context, index) {
-                final currentRating = rating.displayable[index];
+                final currentRating = widget.rating.displayable[index];
                 return Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(currentRating["label"]),
-                    Rating.getStarRating(
-                        currentRating["value"] as double)
+                    currentRating["value"] == null ?
+                      Rating.getStarRating(0, color: Colors.grey) :
+                      Rating.getStarRating(currentRating["value"] as double)
                   ],
                 );
               }),
         Row(
           children: [
-            if (!isExpanded)
-              Rating.getStarRating(rating.averageRating),
+            if (!isExpanded) Rating.getStarRating(widget.rating.averageRating),
             const Spacer(),
             TextButton(
                 onPressed: () => setState(() => isExpanded = !isExpanded),
