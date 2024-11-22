@@ -40,7 +40,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
       throw Exception('User is not signed in.');
     }
     final userProvider = ref.read(userNotifier.notifier);
-    final profile = await userProvider.fetchProfile(user.id);
+    final profile = await userProvider.fetchMyProfile();
 
     if (profile == null) {
       if (mounted) {

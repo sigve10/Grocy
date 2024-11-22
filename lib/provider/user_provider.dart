@@ -11,10 +11,33 @@ final userNotifier = StateNotifierProvider<UserProvider, Map<String, dynamic>>(
 class UserProvider extends StateNotifier<Map<String, dynamic>> {
   UserProvider() : super({});
 
+  Future<Map<String, dynamic>?> fetchMyProfile() async {
+    final user = supabase.auth.currentUser;
+
+    if (user == null) {
+      throw Exception('User is not signed in.');
+    }
+
+    final query = supabase.from('profiles')
+      .select()
+      .eq('id', user.id)
+      .single();
+    try {
+      final data = await query;
+      state = data;
+      return data;
+    } on PostgrestException catch (error) {
+      debugPrint('Error fetching profile: ${error.message}');
+      return null;
+    } catch (error) {
+      debugPrint('Unexpected error occurred: $error');
+      return null;
+    }
+  }
+
   /// Fetches the current user's profile from Supabase.
   /// Returns the profile data or `null` if the user is not signed in.
   Future<Map<String, dynamic>?> fetchProfile(String userId) async {
-    print("Getting profile!");
 
     final query = supabase.from('profiles')
       .select()
@@ -22,7 +45,6 @@ class UserProvider extends StateNotifier<Map<String, dynamic>> {
       .single();
     try {
       final data = await query;
-      print("Testing: $data");
       return data;
     } on PostgrestException catch (error) {
       debugPrint('Error fetching profile: ${error.message}');
