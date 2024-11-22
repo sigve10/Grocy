@@ -161,7 +161,12 @@ class _SearchWidgetUserTagsState extends ConsumerState<_SearchWidgetUserTags> {
 
   @override
   Widget build(BuildContext context) {
-    final tags = ref.watch(tagProvider);
+    final primaryTag = ref.watch(searchProvider).mainTag;
+    List<Tag >tags = ref.watch(tagProvider);
+
+    if (primaryTag != null) {
+      tags = tags.where((tag) => tag.primaryTag == primaryTag.name).toList();
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
