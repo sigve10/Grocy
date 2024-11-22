@@ -31,6 +31,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
   bool isFavorite = false;
   List<Tag> tags = [];
   List<Rating> reviews = [];
+  Rating ratingSummary = Rating(productEan: "-1");
 
   @override
   void initState() {
@@ -53,8 +54,11 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
   }
 
   void getReviews() async {
-    final statelessReviews = await ref.read(reviewNotifier.notifier).fetchReviews(widget.product.ean);
+    final reviewNotifierInstance = ref.read(reviewNotifier.notifier);
+    final statelessRatingSummary = await reviewNotifierInstance.getReviewSummary(widget.product.ean);
+    final statelessReviews = await reviewNotifierInstance.fetchReviews(widget.product.ean);
     setState(() {
+      ratingSummary = statelessRatingSummary;
       reviews = statelessReviews;
     });
   }
@@ -267,11 +271,9 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
 
             RatingsSection(
                 product: widget.product,
-                rating: Rating(productEan: "", userId: "")
-                  ..customerSatisfactionRating = 5
-                  ..labelAccuracyRating = 4.5
-                  ..priceRating = 2.5
-                  ..consistencyRating = 1),
+                onReviewLeft: getReviews,
+                rating: ratingSummary,
+            ),
 
             const SizedBox(height: 24),
 
@@ -314,9 +316,14 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
 class RatingsSection extends StatelessWidget {
   final Rating rating;
   final Product product;
+  final Function onReviewLeft;
 
-  const RatingsSection(
-      {super.key, required this.rating, required this.product});
+  const RatingsSection({
+    super.key,
+    required this.rating,
+    required this.product,
+    required this.onReviewLeft
+  });
 
   List<Widget> createRatings() {
     final List<Widget> retval = [];
@@ -330,7 +337,10 @@ class RatingsSection extends StatelessWidget {
             currentRating["label"],
             textAlign: TextAlign.center,
           ),
-          Rating.getStarRating(currentRating["value"] as double)
+          if (currentRating["value"] == null)
+            Rating.getStarRating(0, color: Colors.grey)
+          else
+            Rating.getStarRating(currentRating["value"] as double)
         ],
       )));
     }
@@ -370,7 +380,10 @@ class RatingsSection extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (context) =>
-                            LeaveReviewScreen(product: product),
+                            LeaveReviewScreen(
+                              product: product,
+                              onReviewLeft: onReviewLeft
+                            ),
                       ),
                     );
                   },

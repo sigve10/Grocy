@@ -69,12 +69,12 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
       .select()
       .eq("user_id", userId)
       .eq("product_ean", ean)
-      .single();
+      .maybeSingle();
 
     try {
       final response = await query;
 
-      if (response.isEmpty) return null;
+      if (response == null) return null;
 
       rating = Rating.fromJson(response);
     } catch(error) {
@@ -84,10 +84,31 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
     return rating;
   }
 
+  Future<Rating> getReviewSummary(String ean) async {
+    Rating result = Rating(productEan: ean);
+
+    final query = supabase.rpc("get_summary_of_reviews", params: {"ean": ean}).single();
+
+    try {
+      final response = await query;
+      print(response);
+      result.customerSatisfactionRating = response["customer_satisfaction"] as double;
+      result.labelAccuracyRating = response["label_accuracy"] as double;
+      result.priceRating = response["price_accuracy"] as double;
+      result.consistencyRating = response["consistency"] as double;
+    } catch (error) {
+      debugPrint('Error fetch reviews from the reviews table, $error');
+    }
+
+    print(result.displayable);
+
+    return result;
+  }
+
   //TODO: implement fetch reviews for the product only in product screen, probably isn't a problem but ya know
 
   /// Adds a review to the database via the authenticated user.
-  void addReview(Rating rating) async {
+  Future<void> addReview(Rating rating) async {
     // Get the user that's authenticated / logged in user
     final user = supabase.auth.currentUser;
 

@@ -6,7 +6,8 @@ import 'package:grocy/provider/review_provider.dart';
 
 class LeaveReviewScreen extends ConsumerStatefulWidget {
   final Product product;
-  const LeaveReviewScreen({super.key, required this.product});
+  final Function? onReviewLeft;
+  const LeaveReviewScreen({super.key, this.onReviewLeft, required this.product});
 
   @override
   LeaveReviewScreenState createState() => LeaveReviewScreenState();
@@ -55,6 +56,24 @@ class LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       getOldReview();
     });
+  }
+
+  void leaveReview() async {
+    final reviewText = _reviewController.text;
+
+    final Rating newRating = Rating(productEan: widget.product.ean);
+    newRating.customerSatisfactionRating = ratings["Customer Satisfaction"] as double?;
+    newRating.labelAccuracyRating = ratings["Label Accuracy"] as double?;
+    newRating.priceRating = ratings["Bang for Buck"] as double?;
+    newRating.consistencyRating = ratings["Consistency"] as double?;
+    newRating.content = reviewText.isNotEmpty ? reviewText : null;
+
+    await reviewProvider.addReview(newRating);
+    if (widget.onReviewLeft != null) {
+      widget.onReviewLeft!();
+    }
+
+    Navigator.pop(context);
   }
 
   @override
@@ -132,20 +151,7 @@ class LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
                     child: const Text("Cancel"),
                   ),
                   ElevatedButton(
-                    onPressed: () {
-                      final reviewText = _reviewController.text;
-
-                      final Rating newRating = Rating(productEan: widget.product.ean);
-                      newRating.customerSatisfactionRating = ratings["Customer Satisfaction"] as double?;
-                      newRating.labelAccuracyRating = ratings["Label Accuracy"] as double?;
-                      newRating.priceRating = ratings["Bang for Buck"] as double?;
-                      newRating.consistencyRating = ratings["Consistency"] as double?;
-                      newRating.content = reviewText.isNotEmpty ? reviewText : null;
-
-                      reviewProvider.addReview(newRating);
-
-                      Navigator.pop(context);
-                    },
+                    onPressed: leaveReview,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,
                     ),
