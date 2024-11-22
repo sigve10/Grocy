@@ -39,10 +39,10 @@ class LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
     final Rating? oldReview = await reviewProvider.fetchReview(widget.product.ean, null);
     if (oldReview != null) {
       setState(() {
-        ratings["Customer Satisfaction"] = oldReview.customerSatisfactionRating as int?;
-        ratings["Label Accuracy"] = oldReview.labelAccuracyRating as int?;
-        ratings["Bang for Buck"] = oldReview.priceRating as int?;
-        ratings["Consistency"] = oldReview.consistencyRating as int?;
+        ratings["Customer Satisfaction"] = oldReview.customerSatisfactionRating?.floor();
+        ratings["Label Accuracy"] = oldReview.labelAccuracyRating?.floor();
+        ratings["Bang for Buck"] = oldReview.priceRating?.floor();
+        ratings["Consistency"] = oldReview.consistencyRating?.floor();
         _reviewController.text = oldReview.content ?? "";
       });
     }
