@@ -5,10 +5,10 @@ import 'package:grocy/models/tag.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final tagProvider =
-    StateNotifierProvider<TagNotifier, List<Tag>>((ref) => TagNotifier());
+StateNotifierProvider<TagNotifier, List<Tag>>((ref) => TagNotifier());
 
 final primaryTagProvider =
-  StateNotifierProvider<PrimaryTagNotifier, List<Tag>>((ref) => PrimaryTagNotifier());
+StateNotifierProvider<PrimaryTagNotifier, List<Tag>>((ref) => PrimaryTagNotifier());
 
 /// State notifier (Riverpod) for managing tags.
 /// Fetches tags from the database.
@@ -24,14 +24,42 @@ class TagNotifier extends StateNotifier<List<Tag>> {
       response = await supabase.from("tags").select();
 
       userTags = (response as List<dynamic>)
-        .map((item) => Tag.fromJson(item as Map<String, dynamic>))
-        .toList();
+          .map((item) => Tag.fromJson(item as Map<String, dynamic>))
+          .toList();
     } catch(error) {
       debugPrint('Error fetching tags: $error');
     }
 
     if (userTags != null) {
       state = userTags;
+    }
+  }
+
+  Future<bool> addTagToProduct(Tag tag, String productEan) async {
+    try {
+      debugPrint('Adding/upserting tag: ${tag.toJson()} into tags table');
+
+      /// Add the tag to the tags table
+      final tagResponse = await supabase.from('tags').upsert({
+        'name': tag.name,
+        'primary_tag': tag.primaryTag,
+      }).select();
+
+      /// Link the tag to the product
+      debugPrint('Linking tag: ${tag.name} to product: $productEan');
+
+      final productTagResponse = await supabase.from('product_tags').insert({
+        'product_ean': productEan,
+        'tag_name': tag.name,
+      }).select();
+
+      state = [...state, tag];
+
+      return true;
+    } catch (error, stackTrace) {
+      debugPrint('Error adding tag to product: $error');
+      debugPrint('StackTrace: $stackTrace');
+      return false;
     }
   }
 }
@@ -46,8 +74,8 @@ class PrimaryTagNotifier extends StateNotifier<List<Tag>> {
     try {
       response = await supabase.from("primary_tags").select("name");
       primaryTags = (response as List)
-        .map((item) => Tag.fromJson(item as Map<String, dynamic>))
-        .toList();
+          .map((item) => Tag.fromJson(item as Map<String, dynamic>))
+          .toList();
     } catch (error) {
       debugPrint("Error fetching primary tags: $error");
     }
