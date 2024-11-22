@@ -51,9 +51,11 @@ class WishlistProvider extends StateNotifier<List<Product>> {
 
     bool isProductInWishlist = false;
 
+    /// Check if the product is in the wishlist and check what user it is.
     final query = supabase.from("wishlist")
         .select()
         .eq("product_ean", product.ean)
+        .eq("user_id", user.id)
         .count();
 
     try {
@@ -62,7 +64,6 @@ class WishlistProvider extends StateNotifier<List<Product>> {
     } catch (error) {
       debugPrint('Error fetching the wishlist from the database: $error');
     }
-
     return isProductInWishlist;
   }
 

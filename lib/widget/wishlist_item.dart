@@ -21,7 +21,9 @@ class WishlistItem extends StatelessWidget {
       append: IconButton(
         icon: Icon(
           isFavorite ? Icons.favorite : Icons.favorite_border,
-          color: isFavorite ? Colors.red : Colors.grey.shade400,
+          color: isFavorite
+              ? Theme.of(context).colorScheme.primary
+              : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
           semanticLabel: isFavorite
               ? 'Remove from wishlist'
               : 'Add to wishlist',
