@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:grocy/models/product.dart';
 import 'package:grocy/models/rating.dart';
 import '../manager/wishlist_manager.dart';
+import '../models/tag.dart';
+import '../provider/product_provider.dart';
+import '../provider/tag_provider.dart';
+import '../widget/tag_search_widget.dart';
 import 'leave_review_screen.dart';
 
 /// The screen that displays the details of a product.
-class ProductScreen extends StatefulWidget {
+class ProductScreen extends ConsumerStatefulWidget {
   const ProductScreen({
     super.key,
     required this.product,
@@ -15,49 +20,29 @@ class ProductScreen extends StatefulWidget {
   final Product product;
 
   @override
-  State<ProductScreen> createState() => _ProductScreenState();
+  ConsumerState<ProductScreen> createState() => _ProductScreenState();
 }
 
-class _StarRatingUtil {
-  static Widget getStarRating(double stars) {
-    const double starSize = 20;
-    const Color starColor = Colors.amber;
-
-    const Icon fullStar = Icon(Icons.star, size: starSize, color: starColor);
-    const Icon halfStar =
-        Icon(Icons.star_half, size: starSize, color: starColor);
-    const Icon noStar =
-        Icon(Icons.star_border, size: starSize, color: starColor);
-
-    int fullStars = stars.floor();
-    bool hasHalfStar = stars - (fullStars as double) >= 0.5;
-    int noStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
-
-    return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-      for (int i = 0; i < fullStars; i++) fullStar,
-      if (hasHalfStar) halfStar,
-      for (int i = 0; i < noStars; i++) noStar
-    ]);
-  }
-}
-
-class _ProductScreenState extends State<ProductScreen> {
+class _ProductScreenState extends ConsumerState<ProductScreen> {
   List<Product> filteredProducts = [];
-  late _Rating productRating;
   bool isExpanded = false;
   bool isFavorite = false;
+  List<Tag> tags = [];
 
   @override
   void initState() {
     super.initState();
     isFavorite = _isInWishlist(widget.product);
     filteredProducts = [widget.product];
-    productRating = _Rating(
-      customerSatisfaction: 4.5,
-      labelAccuracy: 4.0,
-      bangForBuck: 2.5,
-      consistency: 1,
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(primaryTagProvider.notifier).fetchPrimaryTags();
+    });
+    ref.read(productProvider.notifier).fetchTagsForProduct(widget.product.ean).
+    then((fetchedTags) {
+      setState(() {
+        tags = fetchedTags;
+      });
+    });
   }
 
   /// to check if the product is in the wishlist
@@ -84,28 +69,72 @@ class _ProductScreenState extends State<ProductScreen> {
     });
   }
 
-/// filter the products based on the query
-  void _filterProducts(String query) {
+  void _onAddUserTagPressed() {
+    final productPrimaryTag = widget.product.primaryTag;
+
+    if (productPrimaryTag == null || productPrimaryTag.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Product does not have a primary tag.')),
+      );
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Add User Tag'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Tag Search and Selection
+                SizedBox(
+                  height: 300,
+                  child: TagSearchWidget(
+                    onTagSelected: (Tag selectedTag) {
+                      _addUserTag(selectedTag);
+                      Navigator.of(context).pop();
+                    },
+                    allowCreateNewTag: true,
+                    primaryTag: productPrimaryTag,
+                    productEan: widget.product.ean,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _addUserTag(Tag tag) async {
+    // Fetch updated product data using productProvider
+    final updatedTags = await ref.read(productProvider.notifier).fetchTagsForProduct(widget.product.ean);
+
+    // Update the UI
     setState(() {
-      filteredProducts = [widget.product]
-          .where((product) =>
-              product.name.toLowerCase().contains(query.toLowerCase()))
-          .toList();
+      tags = updatedTags;
     });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Tag "${tag.name}" added successfully')),
+    );
   }
 
   /// Handle tag selection from SearchWidget.
   @override
   Widget build(BuildContext context) {
-    final ratings = [
-      {
-        'label': 'Customer Satisfaction',
-        'value': productRating.customerSatisfaction
-      },
-      {'label': 'Label Accuracy', 'value': productRating.labelAccuracy},
-      {'label': 'Bang for Buck', 'value': productRating.bangForBuck},
-      {'label': 'Consistency', 'value': productRating.consistency},
-    ];
+    ProductProvider productNotifier = ref.watch(productProvider.notifier);
 
     return Scaffold(
       appBar: AppBar(),
@@ -151,6 +180,17 @@ class _ProductScreenState extends State<ProductScreen> {
                     ),
                     onPressed: _toggleWishlist,
                   ),
+                  const SizedBox(width: 16),
+
+                  IconButton(
+                    icon: Icon(
+                      Icons.add_circle,
+                      color: Theme.of(context).colorScheme.primary,
+                      size: 24, // Adjust the size as needed
+                    ),
+                    onPressed: _onAddUserTagPressed,
+                    tooltip: 'Add User Tag',
+                  ),
                 ],
               ),
             ),
@@ -164,6 +204,39 @@ class _ProductScreenState extends State<ProductScreen> {
                     ),
               ),
             ),
+
+            // Product Tags
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: widget.product.primaryTag != null && widget.product.primaryTag!.isNotEmpty
+                  ? Chip(label: Text(widget.product.primaryTag!))
+                  : const Text("No tag available"),
+            ),
+
+            // user tags
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: FutureBuilder(
+                future: productNotifier.fetchTagsForProduct(widget.product.ean),
+                builder: (context, AsyncSnapshot snapshot) {
+                  if (!snapshot.hasData) {
+                    return CircularProgressIndicator();
+                  }
+                  List<Tag> data = snapshot.data as List<Tag>;
+                  return data.isNotEmpty
+                      ? Wrap(
+                    spacing: 8.0,
+                    children: data.map((tag) {
+                      return Chip(
+                        label: Text(tag.name),
+                      );
+                    }).toList(),
+                  )
+                      : const Text("No user tags available");
+                }
+              ),
+            ),
+
 
             Divider(
               color: Theme.of(context).colorScheme.primary,
@@ -232,7 +305,7 @@ class RatingsSection extends StatelessWidget {
             currentRating["label"],
             textAlign: TextAlign.center,
           ),
-          _StarRatingUtil.getStarRating(currentRating["value"] as double)
+          Rating.getStarRating(currentRating["value"] as double)
         ],
       )));
     }
@@ -258,7 +331,6 @@ class RatingsSection extends StatelessWidget {
                     crossAxisCount: 2,
                     crossAxisSpacing: 4,
                     mainAxisSpacing: 4,
-                    // Why are flutter grid this awful?
                     mainAxisExtent: 94),
                 physics: const NeverScrollableScrollPhysics(),
                 shrinkWrap: true,
@@ -366,7 +438,7 @@ class ReviewState extends State<Review> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(currentRating["label"]),
-                    _StarRatingUtil.getStarRating(
+                    Rating.getStarRating(
                         currentRating["value"] as double)
                   ],
                 );
@@ -374,7 +446,7 @@ class ReviewState extends State<Review> {
         Row(
           children: [
             if (!isExpanded)
-              _StarRatingUtil.getStarRating(rating.averageRating),
+              Rating.getStarRating(rating.averageRating),
             const Spacer(),
             TextButton(
                 onPressed: () => setState(() => isExpanded = !isExpanded),
@@ -398,22 +470,8 @@ class ReviewCategory extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [Text(title), _StarRatingUtil.getStarRating(rating)],
+        children: [Text(title), Rating.getStarRating(rating)],
       ),
     );
   }
-}
-
-class _Rating {
-  final double customerSatisfaction;
-  final double labelAccuracy;
-  final double bangForBuck;
-  final double consistency;
-
-  _Rating({
-    required this.customerSatisfaction,
-    required this.labelAccuracy,
-    required this.bangForBuck,
-    required this.consistency,
-  });
 }
