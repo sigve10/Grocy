@@ -5,6 +5,7 @@ import 'package:grocy/screens/create_product_screen.dart';
 import 'package:grocy/screens/product_screen.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:grocy/extentions/snackbar_context.dart';
 
 import '../models/product.dart';
 
@@ -22,7 +23,7 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen>
     autoStart: true,
   );
   Barcode? _barcode;
-  bool isTryFetch = false;
+  bool isFetching = false;
   StreamSubscription<Object?>? _subscription;
 
   final supabase = Supabase.instance.client;
@@ -33,37 +34,44 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen>
 
       print('Barcode detected: $detectedBarcode');
 
-      if (detectedBarcode != null && detectedBarcode.displayValue != null && isTryFetch == false) {
-        isTryFetch = true;
+      if (detectedBarcode != null &&
+          detectedBarcode.displayValue != null &&
+          isFetching == false) {
         setState(() {
+          isFetching = true;
           _barcode = detectedBarcode;
         });
 
         fetchProduct(detectedBarcode.displayValue!)
-          .whenComplete(() => isTryFetch = false);
+            .whenComplete(() => setState(() => isFetching = false));
       }
     }
   }
 
   Future<void> fetchProduct(String barcode) async {
     print("Fetching product with barcode: $barcode");
-    final res = await supabase.functions.invoke("fetch-product",
-        body: {"ean": barcode},
-        headers: {"Content-Type": "application/json"},
-        method: HttpMethod.post);
 
-    if (res.status == 200 && res.data != null) {
+    try {
+      final res = await supabase.functions.invoke("fetch-product",
+          body: {"ean": barcode},
+          headers: {"Content-Type": "application/json"},
+          method: HttpMethod.post);
+
       final productJson = res.data as Map<String, dynamic>;
       Product product = Product.fromJson(productJson);
 
       if (product.ean.isEmpty) {
-        print("Product not found");
+        if (mounted) context.showSnackBar("Error parsing product");
         return;
       }
 
       if (product.primaryTag == null) {
-        await Navigator.push(context,
-            MaterialPageRoute(builder: (context) => CreateProductScreen(product: product,)));
+        await Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => CreateProductScreen(
+                      product: product,
+                    )));
       } else {
         await Navigator.push(
           context,
@@ -72,9 +80,12 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen>
           ),
         );
       }
-    } else {
-      print("Error: " + res.data);
-    }
+    } catch (e) {
+      if (e is FunctionException) {
+        print(e.details);
+        if (mounted) context.showSnackBar(e.details['error']);
+      }
+  }
   }
 
   Widget _buildBarcode(Barcode? barcode) {
@@ -144,17 +155,17 @@ class _BarcodeScanScreenState extends State<BarcodeScanScreen>
         controller: controller,
       ),
       Align(
-        alignment: Alignment.bottomCenter,
-        child: Container(
-            alignment: Alignment.bottomCenter,
-            height: 100,
-            color: Colors.black.withOpacity(0.4),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Expanded(child: Center(child: _buildBarcode(_barcode)))
-              ],
-            )),
+        alignment: Alignment.center,
+        child: isFetching
+            ? Container(
+                padding: const EdgeInsets.all(16.0),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                child: const CircularProgressIndicator(),
+              )
+            : null,
       )
     ]);
   }
