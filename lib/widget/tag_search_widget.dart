@@ -25,13 +25,26 @@ class _TagSearchWidgetState extends ConsumerState<TagSearchWidget> {
   TextEditingController tagSearchController = TextEditingController();
   Set<Tag> selectedUserTags = {};
 
-  void addUserTag(Tag tag) {
+  void addUserTag(Tag tag) async {
     setState(() {
       selectedUserTags.add(tag);
       tagSearchController.clear();
     });
-    widget.onTagSelected(tag);
-  }
+
+    bool success = await ref
+        .read(tagProvider.notifier)
+        .addTagToProduct(tag, widget.productEan!);
+    if (success) {
+      widget.onTagSelected(tag);
+      ref.read(tagProvider.notifier).fetchTags();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tag added successfully')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to add tag')),
+      );
+    }  }
 
   void removeUserTag(Tag tag) {
     setState(() => selectedUserTags.remove(tag));
