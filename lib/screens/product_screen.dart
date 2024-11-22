@@ -31,7 +31,7 @@ class _StarRatingUtil {
         Icon(Icons.star_border, size: starSize, color: starColor);
 
     int fullStars = stars.floor();
-    bool hasHalfStar = stars - (fullStars as double) >= 0.5;
+    bool hasHalfStar = stars - (fullStars.toDouble()) >= 0.5;
     int noStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
 
     return Row(mainAxisAlignment: MainAxisAlignment.center, children: [
