@@ -1,23 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:grocy/models/product.dart';
+import 'package:grocy/models/rating.dart';
+import 'package:grocy/provider/review_provider.dart';
 
-class LeaveReviewScreen extends StatefulWidget {
-  const LeaveReviewScreen({super.key});
+class LeaveReviewScreen extends ConsumerStatefulWidget {
+  final Product product;
+  const LeaveReviewScreen({super.key, required this.product});
 
   @override
   LeaveReviewScreenState createState() => LeaveReviewScreenState();
 }
 
-class LeaveReviewScreenState extends State<LeaveReviewScreen> {
-  final Map<String, int> ratings = {
-    "Customer Satisfaction": 0,
-    "Label Accuracy": 0,
-    "Bang for Buck": 0,
-    "Consistency": 0,
+class LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
+  final Map<String, int?> ratings = {
+    "Customer Satisfaction": null,
+    "Label Accuracy": null,
+    "Bang for Buck": null,
+    "Consistency": null,
   };
 
   final TextEditingController _reviewController = TextEditingController();
+  late final ReviewProvider reviewProvider;
 
-  void _updateRating(String category, int rating) {
+  void _updateRating(String category, int? rating) {
     setState(() {
       ratings[category] = rating;
     });
@@ -29,9 +35,30 @@ class LeaveReviewScreenState extends State<LeaveReviewScreen> {
     super.dispose();
   }
 
+  Future<void> getOldReview() async {
+    final Rating? oldReview = await reviewProvider.fetchReview(widget.product.ean, null);
+    if (oldReview != null) {
+      setState(() {
+        ratings["Customer Satisfaction"] = oldReview.customerSatisfactionRating as int?;
+        ratings["Label Accuracy"] = oldReview.labelAccuracyRating as int?;
+        ratings["Bang for Buck"] = oldReview.priceRating as int?;
+        ratings["Consistency"] = oldReview.consistencyRating as int?;
+        _reviewController.text = oldReview.content ?? "";
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    reviewProvider = ref.read(reviewNotifier.notifier);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      getOldReview();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Leave a Review'),
@@ -56,10 +83,10 @@ class LeaveReviewScreenState extends State<LeaveReviewScreen> {
                       Text(category, style: const TextStyle(fontSize: 16)),
                       const SizedBox(height: 8),
                       Row(
-                        children: List.generate(5, (index) {
+                        children: List.generate(5, (int index) {
                           return IconButton(
                             icon: Icon(
-                              index < ratings[category]!
+                              index < (ratings[category] ?? 0)
                                   ? Icons.star
                                   : Icons.star_border,
                               color: Colors.amber,
@@ -107,9 +134,17 @@ class LeaveReviewScreenState extends State<LeaveReviewScreen> {
                   ElevatedButton(
                     onPressed: () {
                       final reviewText = _reviewController.text;
-                      final selectedRatings = Map<String, int>.from(ratings);
-                      print("Review Text: $reviewText");
-                      print("Ratings: $selectedRatings");
+
+                      final Rating newRating = Rating(productEan: widget.product.ean);
+                      newRating.customerSatisfactionRating = ratings["Customer Satisfaction"] as double?;
+                      newRating.labelAccuracyRating = ratings["Label Accuracy"] as double?;
+                      newRating.priceRating = ratings["Bang for Buck"] as double?;
+                      newRating.consistencyRating = ratings["Consistency"] as double?;
+                      newRating.content = reviewText.isNotEmpty ? reviewText : null;
+
+                      reviewProvider.addReview(newRating);
+
+                      Navigator.pop(context);
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Theme.of(context).colorScheme.primary,

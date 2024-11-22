@@ -174,11 +174,12 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
             ),
 
             RatingsSection(
-                rating: Rating(productEan: "", userId: "")
-                  ..customerSatisfactionRating = 5
-                  ..labelAccuracyRating = 4.5
-                  ..priceRating = 2.5
-                  ..consistencyRating = 1),
+              product: widget.product,
+              rating: Rating(productEan: "", userId: "")
+                ..customerSatisfactionRating = 5
+                ..labelAccuracyRating = 4.5
+                ..priceRating = 2.5
+                ..consistencyRating = 1),
 
             const SizedBox(height: 24),
 
@@ -220,8 +221,9 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
 /// A section that displays the ratings of a product.
 class RatingsSection extends StatelessWidget {
   final Rating rating;
+  final Product product;
 
-  const RatingsSection({super.key, required this.rating});
+  const RatingsSection({super.key, required this.rating, required this.product});
 
   List<Widget> createRatings() {
     final List<Widget> retval = [];
@@ -275,7 +277,7 @@ class RatingsSection extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const LeaveReviewScreen(),
+                        builder: (context) => LeaveReviewScreen(product: product),
                       ),
                     );
                   },

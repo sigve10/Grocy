@@ -32,6 +32,34 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
     return reviews;
   }
 
+  Future<Rating?> fetchReview(String ean, String? userId) async {
+    userId = userId ?? supabase.auth.currentUser?.id;
+
+    if (userId == null) {
+      throw Exception('User not logged in');
+    }
+
+    late final Rating rating;
+
+    final query = supabase.from("reviews")
+      .select()
+      .eq("user_id", userId)
+      .eq("product_ean", ean)
+      .single();
+
+    try {
+      final response = await query;
+
+      if (response.isEmpty) return null;
+
+      rating = Rating.fromJson(response);
+    } catch(error) {
+      debugPrint('Error fetch reviews from the reviews table, $error');
+    }
+
+    return rating;
+  }
+
   //TODO: implement fetch reviews for the product only in product screen, probably isn't a problem but ya know
 
   /// Adds a review to the database via the authenticated user.
@@ -65,7 +93,7 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
     };
     try {
       // Insert the review into the "reviews" table
-      await supabase.from('reviews').insert(reviewData);
+      await supabase.from('reviews').upsert(reviewData);
 
       // Temporary while testing the method.
       debugPrint('Review inserted successfully: $reviewData');
