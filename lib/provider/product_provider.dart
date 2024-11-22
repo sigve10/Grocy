@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:grocy/main.dart';
 import 'package:grocy/models/product.dart';
 import 'package:grocy/provider/search_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/tag.dart';
 
 // https://www.youtube.com/watch?v=5RoCKuJaYPU
