@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:grocy/main.dart';
 import 'package:grocy/models/product.dart';
 import 'package:grocy/provider/search_provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/tag.dart';
 
 // https://www.youtube.com/watch?v=5RoCKuJaYPU
 
@@ -59,5 +60,17 @@ class ProductProvider extends StateNotifier<List<Product>> {
       debugPrint("Error fetching products: $error");
       debugPrintStack();
     }
+  }
+
+  Future<List<Tag>> fetchTagsForProduct(String productEan) async {
+    final response = await supabase
+        .from('product_tags')
+        .select()
+        .eq('product_ean', productEan);
+
+    final result = (response as List)
+        .map((tagData) => Tag(name: tagData['tag_name'] as String))
+        .toList();
+    return result;
   }
 }
