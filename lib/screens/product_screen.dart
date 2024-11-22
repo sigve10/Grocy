@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:grocy/models/product.dart';
 import 'package:grocy/models/rating.dart';
+import 'package:grocy/provider/wishlist_provider.dart';
 import '../manager/wishlist_manager.dart';
 import 'leave_review_screen.dart';
 
 /// The screen that displays the details of a product.
-class ProductScreen extends StatefulWidget {
+class ProductScreen extends ConsumerStatefulWidget {
   const ProductScreen({
     super.key,
     required this.product,
@@ -15,7 +17,7 @@ class ProductScreen extends StatefulWidget {
   final Product product;
 
   @override
-  State<ProductScreen> createState() => _ProductScreenState();
+  ConsumerState<ProductScreen> createState() => _ProductScreenState();
 }
 
 class _StarRatingUtil {
@@ -41,7 +43,7 @@ class _StarRatingUtil {
   }
 }
 
-class _ProductScreenState extends State<ProductScreen> {
+class _ProductScreenState extends ConsumerState<ProductScreen> {
   List<Product> filteredProducts = [];
   late _Rating productRating;
   bool isExpanded = false;
@@ -50,7 +52,7 @@ class _ProductScreenState extends State<ProductScreen> {
   @override
   void initState() {
     super.initState();
-    isFavorite = _isInWishlist(widget.product);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _updateIsFavorite(widget.product));
     filteredProducts = [widget.product];
     productRating = _Rating(
       customerSatisfaction: 4.5,
@@ -61,26 +63,28 @@ class _ProductScreenState extends State<ProductScreen> {
   }
 
   /// to check if the product is in the wishlist
-  bool _isInWishlist(Product product) {
-    return WishlistManager().isInWishlist(product);
+  void _updateIsFavorite(Product product) async {
+    WishlistProvider wishlistProvider = ref.read(wishlistNotifier.notifier);
+    bool whatIsFavoriteState = await wishlistProvider.isWishlisted(product);
+    setState(() => isFavorite = whatIsFavoriteState);
   }
 
   /// add or removes a product from the wishlist
   void _toggleWishlist() {
     setState(() {
-      if (_isInWishlist(widget.product)) {
-        WishlistManager().removeFromWishlist(widget.product);
-        isFavorite = false;
+      WishlistProvider wishlistProvider = ref.read(wishlistNotifier.notifier);
+      if (isFavorite) {
+        wishlistProvider.deleteProductFromWishlist(widget.product);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Removed from wishlist')),
         );
       } else {
-        WishlistManager().addToWishlist(widget.product);
-        isFavorite = true;
+        wishlistProvider.addProductToWishlist(widget.product);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Added to wishlist')),
         );
       }
+      isFavorite = !isFavorite;
     });
   }
 
