@@ -25,18 +25,13 @@ class ProductListState extends ConsumerState<ProductList> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(productProvider.notifier).fetchProducts();
     });
-    // Funny how I needed to actually fetch the reviews first before they would display
-    // WHo woulda thunk 🤓
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(reviewNotifier.notifier).fetchReviews();
-    });
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     final List<Product> products = ref.watch(productProvider);
-    final reviews = ref.watch(reviewNotifier);
+    final reviews = ref.watch(reviewNotifier.notifier).fetchReviews(products.map((e) => e.ean));
     print(products);
     return Scaffold(
       body: Column(
@@ -49,7 +44,6 @@ class ProductListState extends ConsumerState<ProductList> {
                 final product = products[index];
                 // Will change Rating name to Review shortly.
                 // Connects review's EAN to the product EAN to check which product the review belongs to 🤓
-                final reviewCount = reviews.where((Rating review) => review.productEan == product.ean).length;
                 return GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -111,23 +105,34 @@ class ProductListState extends ConsumerState<ProductList> {
                                 ),
                               ),
                               const SizedBox(height: 4.0),
-                              Row(
-                                children: [
-                                  const Icon(Icons.star,
-                                      size: 16, color: Colors.amber),
-                                  Text(
-                                    "$reviewCount reviews",
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall
-                                        ?.copyWith(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurface
-                                              .withOpacity(0.6),
-                                        ),
-                                  ),
-                                ],
+                              FutureBuilder(
+                                future: reviews,
+                                builder: (context, AsyncSnapshot snapshot) {
+                                  if (!snapshot.hasData) {
+                                    return Row(children: [
+                                      CircularProgressIndicator()
+                                    ],);
+                                  }
+                                  final reviewCount = (snapshot.data as List<Rating>).where((e) => e.productEan == product.ean).length;
+                                  return Row(
+                                    children: [
+                                      const Icon(Icons.star,
+                                          size: 16, color: Colors.amber),
+                                      Text(
+                                        "$reviewCount reviews",
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface
+                                                  .withOpacity(0.6),
+                                            ),
+                                      ),
+                                    ],
+                                  );
+                                }
                               ),
                             ],
                           ),

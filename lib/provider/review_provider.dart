@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:grocy/main.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/rating.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -12,19 +13,23 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
   ReviewProvider() : super([]);
 
   /// Default fetch that fetches all the reviews from the database.
-  Future<void> fetchReviews() async {
-    try {
-      final response = await supabase.from('reviews').select();
+  Future<List<Rating>> fetchReviews(Iterable<String> eans) async {
+    late final List<Rating> reviews;
 
-      final reviews = (response as List<dynamic>)
+    final query = supabase.from('reviews')
+        .select()
+        .inFilter("product_ean", eans.toList());
+    try {
+      final response = await query;
+
+      reviews = (response as List<dynamic>)
           .map((item) => Rating.fromJson(item as Map<String, dynamic>))
           .toList();
-
-      state = reviews;
-      debugPrint('$state'); // Midlertidig debug mens e holder på med disse.
     } catch (error) {
       debugPrint('Error fetch reviews from the reviews table, $error');
     }
+
+    return reviews;
   }
 
   //TODO: implement fetch reviews for the product only in product screen, probably isn't a problem but ya know
