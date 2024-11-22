@@ -106,7 +106,6 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
               children: [
                 // Tag Search and Selection
                 SizedBox(
-                  height: 300,
                   child: TagSearchWidget(
                     onTagSelected: (Tag selectedTag) {
                       _addUserTag(selectedTag);
