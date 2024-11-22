@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:grocy/models/product.dart';
 import 'package:grocy/models/rating.dart';
 import 'package:grocy/provider/wishlist_provider.dart';
-import '../manager/wishlist_manager.dart';
 import 'leave_review_screen.dart';
 
 /// The screen that displays the details of a product.
