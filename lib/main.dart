@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:grocy/provider/user_provider.dart';
+import 'package:grocy/extentions/snackbar_context.dart';
 import 'package:grocy/screens/tabs_container_screen.dart';
+import 'package:grocy/screens/welcome_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 // Supabase redirects do not work with the default URL for flutter, so use this:
 // https://docs.flutter.dev/ui/navigation/url-strategies
@@ -10,15 +13,13 @@ import 'package:flutter_web_plugins/url_strategy.dart';
 final _theme = ThemeData(
   useMaterial3: true,
   colorScheme: ColorScheme.fromSeed(
-    brightness: Brightness.light,
-    seedColor: const Color.fromARGB(255, 255, 0, 0),
-    primary: const Color.fromARGB(0xff, 0xc0, 0x0f, 0x0c),
-    surface: const Color.fromARGB(0xff, 0xf7, 0xf7, 0xf7)
-  ),
+      brightness: Brightness.light,
+      seedColor: const Color.fromARGB(255, 255, 0, 0),
+      primary: const Color.fromARGB(0xff, 0xc0, 0x0f, 0x0c),
+      surface: const Color.fromARGB(0xff, 0xf7, 0xf7, 0xf7)),
   textTheme: GoogleFonts.latoTextTheme(),
 );
 
-// If we want, we can set up RLS for security.
 // "These variables will be exposed on the app, and that's completely fine since we have Row Level Security enabled on our Database" - Supabase.
 const supabaseUrl = 'https://rmjqrlqmzuvmfutfvipl.supabase.co';
 const supabaseKey =
@@ -34,21 +35,103 @@ Future<void> main() async {
 
 final supabase = Supabase.instance.client;
 
+/// Main entry point of the grocy app.
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: _theme,
-      home: const TabsContainerScreen(),
+        title: 'Grocy', theme: _theme, home: const AuthenticationCheck());
+  }
+}
 
-      //Uncomment this and replace the home above for the login- & account pages.
-      /* home: supabase.auth.currentSession == null
-          ? const WelcomePage()
-          : const AccountPage(), */
-    );
+/// A helper class to check the state of the user:
+/// - If user is not authenticated, they are sent to the welcome page that lets them either sign in/ or up.
+/// - If the user doesn't have a username (freshly signed up) then they are given a dialog to choose their username.
+/// - If the user is authenticated and has a username, they are sent directly to the TabsContainerScreen.
+class AuthenticationCheck extends ConsumerWidget {
+  const AuthenticationCheck({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentSession = supabase.auth.currentSession;
+
+    if (currentSession == null) {
+      return const WelcomePage();
+    } else {
+      final userProvider = ref.read(userNotifier.notifier);
+
+      return FutureBuilder<bool>(
+        future: userProvider.checkUserName(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasData) {
+            if (snapshot.data == true) {
+              // If Snapshot is true, then the user has a username already and should take them to Tabs direclty.
+              return const TabsContainerScreen();
+            } else {
+              // The username is empty, should therefore prompt them to choose a username.
+              WidgetsBinding.instance.addPostFrameCallback((_) async {
+                final dialogUsernameController = TextEditingController();
+
+                await showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text('Set Your Username'),
+                      content: TextField(
+                        controller: dialogUsernameController,
+                        decoration: const InputDecoration(
+                          hintText: 'Enter a username, minimum 5 characters',
+                        ),
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () async {
+                            final username =
+                                dialogUsernameController.text.trim();
+                            if (username.isEmpty || username.length < 5) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                      'Username cannot be empty or less than 5 characters'),
+                                ),
+                              );
+                              return;
+                            }
+                            try {
+                              await userProvider.updateProfile(username);
+
+                              if (context.mounted) {
+                                // Navigate to TabsContainerScreen after a successful username update.
+                                Navigator.of(context)
+                                    .pop(); // Close the dialog after.
+                              }
+                            } catch (error) {
+                              if (context.mounted) {
+                                context.showSnackBar(
+                                    'Unable to update user profile: $error');
+                              }
+                            }
+                          },
+                          child: const Text('Submit'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              });
+
+              return const TabsContainerScreen();
+            }
+          } else {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+        },
+      );
+    }
   }
 }
