@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:grocy/main.dart';
+import 'package:grocy/models/rating.dart';
 import 'package:grocy/models/tag.dart';
 import 'package:grocy/provider/product_provider.dart';
+import 'package:grocy/provider/review_provider.dart';
 import 'package:grocy/widget/search_widget.dart';
 import '../models/product.dart';
 import 'product_screen.dart';
@@ -23,12 +25,18 @@ class ProductListState extends ConsumerState<ProductList> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(productProvider.notifier).fetchProducts();
     });
+    // Funny how I needed to actually fetch the reviews first before they would display
+    // WHo woulda thunk 🤓
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(reviewNotifier.notifier).fetchReviews();
+    });
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
     final List<Product> products = ref.watch(productProvider);
+    final reviews = ref.watch(reviewNotifier);
     print(products);
     return Scaffold(
       body: Column(
@@ -39,6 +47,9 @@ class ProductListState extends ConsumerState<ProductList> {
               itemCount: products.length,
               itemBuilder: (context, index) {
                 final product = products[index];
+                // Will change Rating name to Review shortly.
+                // Connects review's EAN to the product EAN to check which product the review belongs to 🤓
+                final reviewCount = reviews.where((Rating review) => review.productEan == product.ean).length;
                 return GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -105,7 +116,7 @@ class ProductListState extends ConsumerState<ProductList> {
                                   const Icon(Icons.star,
                                       size: 16, color: Colors.amber),
                                   Text(
-                                    "50 reviews",
+                                    "$reviewCount reviews",
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodySmall
