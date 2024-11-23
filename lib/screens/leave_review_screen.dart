@@ -24,6 +24,13 @@ class LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
     "Consistency": null,
   };
 
+  final Map<String, String> categoryTexts = {
+    "Customer Satisfaction": "Did you like this product?",
+    "Label Accuracy": "Did you get what you thought you paid for?",
+    "Bang for Buck": "Was it worth the money?",
+    "Consistency": "Is it usually the same quality every time you buy it?",
+  };
+
   final TextEditingController _reviewController = TextEditingController();
   late final ReviewProvider reviewProvider;
 
@@ -94,7 +101,18 @@ class LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(widget.product.name,),
+              Text(
+                widget.product.name,
+                style: Theme.of(context).textTheme.headlineSmall
+              ),
+              const SizedBox(height: 8),
+              Text(
+                "Hint: You can leave ratings blank if you are unsure about a category",
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.onSurface.withAlpha(127)
+                )
+              ),
               const SizedBox(height: 20),
               ...ratings.keys.map((category) {
                 return Padding(
@@ -103,19 +121,36 @@ class LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(category, style: const TextStyle(fontSize: 16)),
+                      const SizedBox(height: 4),
+                      Text(
+                        categoryTexts[category]!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Theme.of(context).colorScheme.onSurface.withAlpha(127)
+                        ),
+                      ),
                       const SizedBox(height: 8),
                       Row(
-                        children: List.generate(5, (int index) {
+                        children: [
+                          ...List.generate(5, (int index) {
                           return IconButton(
                             icon: Icon(
                               index < (ratings[category] ?? 0)
                                   ? Icons.star
                                   : Icons.star_border,
-                              color: Colors.amber,
+                              color: ratings[category] == null
+                                ? Colors.grey
+                                : Colors.amber,
                             ),
                             onPressed: () => _updateRating(category, index + 1),
                           );
                         }),
+                        Spacer(),
+                        IconButton(
+                          onPressed: () => _updateRating(category, null),
+                          icon: Icon(Icons.close)
+                        )
+                        ],
                       ),
                     ],
                   ),
