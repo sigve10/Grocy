@@ -4,6 +4,7 @@ import 'package:grocy/provider/wishlist_provider.dart';
 import '../models/product.dart';
 import '../widget/wishlist_item.dart';
 
+/// A screen that displays the user's wishlist.
 class WishlistScreen extends ConsumerStatefulWidget {
   const WishlistScreen({super.key});
 
@@ -11,6 +12,7 @@ class WishlistScreen extends ConsumerStatefulWidget {
   WishlistScreenState createState() => WishlistScreenState();
 }
 
+/// Manages the state of the wishlist screen.
 class WishlistScreenState extends ConsumerState<WishlistScreen> {
   @override
   void initState() {
@@ -61,6 +63,7 @@ class WishlistScreenState extends ConsumerState<WishlistScreen> {
     );
   }
 
+  /// Shows a dialog to confirm the removal of a product from the wishlist.
   void _showRemoveConfirmationDialog(Product product, Function() onConfirm) {
     showDialog(
       context: context,
