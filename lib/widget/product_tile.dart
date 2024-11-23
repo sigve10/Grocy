@@ -99,35 +99,50 @@ class ProductTile extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 4.0),
-                  FutureBuilder(
-                    future: reviewProvider.fetchRatings([product.ean]),
-                    builder: (context, AsyncSnapshot snapshot) {
-                      if (!snapshot.hasData) {
-                        return Row(children: [
-                          CircularProgressIndicator()
-                        ],);
+                  Wrap(
+                    alignment: WrapAlignment.start,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 12,
+                    children: [
+                    FutureBuilder(
+                      future: reviewProvider.getReviewSummary(product.ean),
+                      builder: (context, AsyncSnapshot<Rating?> snapshot) {
+                        if (!snapshot.hasData) {
+                          return CircularProgressIndicator();
+                        }
+                        final reviewSummary = snapshot.data;
+                        // Rows within a row,
+                        // Flex and expand, space to grow,
+                        // Overflow no more.
+                        // ~ Quoth ChatGPT
+                        return Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: Rating.getStarRating(reviewSummary?.averageRating).children
+                        );
                       }
-                      final reviewCount = (snapshot.data as List<Rating>).where((e) => e.productEan == product.ean).length;
-                      return Row(
-                        children: [
-                          const Icon(Icons.star,
-                              size: 16, color: Colors.amber),
-                          Text(
-                            "$reviewCount reviews",
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurface
-                                      .withOpacity(0.6),
-                                ),
-                          ),
-                        ],
-                      );
-                    }
-                  ),
+                    ),
+                    FutureBuilder(
+                      future: reviewProvider.fetchRatings([product.ean]),
+                      builder: (context, AsyncSnapshot<List<Rating>> snapshot) {
+                        if (!snapshot.hasData || snapshot.data == null) {
+                          return CircularProgressIndicator();
+                        }
+                        final reviewCount = snapshot.data!.where((e) => e.productEan == product.ean).length;
+                        return Text(
+                          "$reviewCount reviews",
+                          style: Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.6),
+                              ),
+                          );
+                      }
+                    ),
+                  ],)
                 ],
               ),
             ),

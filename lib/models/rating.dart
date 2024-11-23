@@ -21,18 +21,22 @@ class Rating {
   }
 
   /// The average rating of the product based on all rated categories
-  double get averageRating {
-    int nonNullRatings = (customerSatisfactionRating == null ? 0 : 1)
+  double? get averageRating {
+    int nonNullRatings = 0 + (customerSatisfactionRating == null ? 0 : 1)
       + (labelAccuracyRating == null ? 0 : 1)
       + (priceRating == null ? 0 : 1)
       + (consistencyRating == null ? 0 : 1);
 
-    double totalRating = (customerSatisfactionRating ?? 0)
+    double totalRating = 0 + (customerSatisfactionRating ?? 0)
       + (labelAccuracyRating ?? 0)
       + (priceRating ?? 0)
       + (consistencyRating ?? 0);
 
-    return totalRating / nonNullRatings;
+    if (nonNullRatings == 0) {
+      return null;
+    }
+    double averageRating = totalRating / nonNullRatings;
+    return averageRating;
   }
 
   /// Generates a list of displayable ratings through mapping
@@ -77,9 +81,12 @@ class Rating {
   }
 
   /// Generates a row for stars that represents the rating.
-  static Widget getStarRating(double stars, {Color? color}) {
+  static Row getStarRating(double? stars, {Color? color}) {
     const double starSize = 20;
-    Color starColor = color ?? Colors.amber;
+    stars = stars ?? 0;
+    Color starColor = stars == 0
+      ? Colors.grey
+      : color ?? Colors.amber;
 
     Icon fullStar = Icon(Icons.star, size: starSize, color: starColor);
     Icon halfStar = Icon(Icons.star_half, size: starSize, color: starColor);

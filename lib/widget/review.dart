@@ -113,7 +113,8 @@ class ReviewState extends ConsumerState<Review> {
                   }),
             Row(
               children: [
-                if (!isExpanded) Rating.getStarRating(widget.rating.averageRating),
+                if (!isExpanded)
+                  Rating.getStarRating(widget.rating.averageRating ?? 0, color: widget.rating.averageRating != null ? null : Colors.grey),
                 const Spacer(),
                 TextButton(
                     onPressed: () => setState(() => isExpanded = !isExpanded),
