@@ -66,7 +66,7 @@ class UserProvider extends StateNotifier<Map<String, dynamic>> {
   /// Checks if the username is empty or not
   /// If it returns true then the username is not empty
   /// if false, the username is empty.
-  Future<bool> checkUserName() async {
+  Future<bool?> checkUserName() async {
     final user = supabase.auth.currentUser;
 
     if (user == null) {
@@ -83,7 +83,7 @@ class UserProvider extends StateNotifier<Map<String, dynamic>> {
     if (response == null) {
         print("User doesn't exist, signing out");
         supabase.auth.signOut();
-        return false;
+        return null;
       }
 
     // Check if response or username is null/empty

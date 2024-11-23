@@ -62,7 +62,7 @@ class _AuthenticationCheck extends ConsumerWidget {
     } else {
       final userProvider = ref.read(userNotifier.notifier);
 
-      return FutureBuilder<bool>(
+      return FutureBuilder<bool?>(
         future: userProvider.checkUserName(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -71,6 +71,8 @@ class _AuthenticationCheck extends ConsumerWidget {
             if (snapshot.data == true) {
               // If Snapshot is true, then the user has a username already and should take them to Tabs direclty.
               return const TabsContainerScreen();
+            } else if (snapshot.data == null) {
+              return const WelcomePage();
             } else {
               // The username is empty, should therefore prompt them to choose a username.
               WidgetsBinding.instance.addPostFrameCallback((_) async {
