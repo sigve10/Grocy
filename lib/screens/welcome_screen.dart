@@ -89,41 +89,6 @@ class _WelcomePageState extends State<WelcomePage> {
   }
 
   @override
-  void initState() {
-    super.initState();
-
-    // Check for an existing session, to prevent Flutter from trying to replace WelcomePage with AccountPage
-    // while WelcomePage is being set up in initstate.
-    final session = supabase.auth.currentSession;
-    if (session != null) {
-      Future.microtask(() {
-        if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const AccountPage()),
-          );
-        }
-      });
-    }
-
-    // Listen for authentication state changes (from Supabase's own project)
-    _authStateSubscription = supabase.auth.onAuthStateChange.listen(
-      (data) {
-        final session = data.session;
-        if (session != null && mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const AccountPage()),
-          );
-        }
-      },
-      onError: (error) {
-        if (mounted) {
-          context.showSnackBar('Error: ${error.toString()}', isError: true);
-        }
-      },
-    );
-  }
-
-  @override
   void dispose() {
     _emailController.dispose();
     _authStateSubscription.cancel();
