@@ -98,7 +98,7 @@ class _WelcomePageState extends State<WelcomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Padding(
-          padding: EdgeInsets.only(top: 20),
+          padding: EdgeInsets.only(top: 20, left: 16),
           child: Text(
             'Welcome',
             style: TextStyle(

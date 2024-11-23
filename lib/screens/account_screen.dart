@@ -134,7 +134,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Padding(
-          padding: EdgeInsets.only(top: 20),
+          padding: EdgeInsets.only(top: 20, left: 16),
           child: Text(
             'My Account',
             style: TextStyle(
