@@ -243,35 +243,51 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
 
             // Product Tags
             Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: widget.product.primaryTag != null &&
-                      widget.product.primaryTag!.isNotEmpty
-                  ? Chip(label: Text(widget.product.primaryTag!))
-                  : const Text("No tag available"),
-            ),
-
-            // user tags
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: FutureBuilder(
-                  future:
-                      productNotifier.fetchTagsForProduct(widget.product.ean),
-                  builder: (context, AsyncSnapshot snapshot) {
-                    if (!snapshot.hasData) {
-                      return CircularProgressIndicator();
-                    }
-                    List<Tag> data = snapshot.data as List<Tag>;
-                    return data.isNotEmpty
-                        ? Wrap(
-                            spacing: 8.0,
-                            children: data.map((tag) {
-                              return Chip(
-                                label: Text(tag.name),
-                              );
-                            }).toList(),
+              padding: const EdgeInsets.all(8.0),
+              child:
+                  FutureBuilder(
+                    future: productNotifier.fetchTagsForProduct(widget.product.ean),
+                    builder: (context, AsyncSnapshot snapshot) {
+                      if (!snapshot.hasData) {
+                        return CircularProgressIndicator();
+                      }
+                      List<Tag> data = snapshot.data as List<Tag>;
+                      return data.isNotEmpty
+                          ? Wrap(
+                        spacing: 8.0,
+                        runSpacing: 8.0,
+                        children: [                  if (widget.product.primaryTag != null && widget.product.primaryTag!.isNotEmpty)
+                          Chip(
+                            label: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.sell,
+                                  size: 20,
+                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                ),
+                                SizedBox(width: 4),
+                                Text(widget.product.primaryTag!),
+                              ],
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              side: BorderSide(
+                                width: 1,
+                                color: Theme.of(context).primaryColor,
+                              ),
+                            ),
                           )
-                        : const Text("No user tags available");
-                  }),
+                        else
+                          const Text("No tag available"), ...(data.map((tag) {
+                          return Chip(
+                            label: Text(tag.name),
+                          );
+                        }).toList())],
+                      )
+                          : const Text("No user tags available");
+                    },
+                  ),
             ),
 
             Divider(
@@ -494,7 +510,7 @@ class ReviewState extends ConsumerState<Review> {
                     Text(currentRating["label"]),
                     if (currentRating["value"] == null)
                       Rating.getStarRating(0, color: Colors.grey)
-                  else
+                    else
                       Rating.getStarRating(currentRating["value"] as double)
                   ],
                 );
