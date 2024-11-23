@@ -11,6 +11,7 @@ import 'package:grocy/extentions/snackbar_context.dart';
 import '../models/product.dart';
 import '../provider/product_provider.dart';
 
+/// A screen that scans a barcode and fetches the product from the backend.
 class BarcodeScanScreen extends ConsumerStatefulWidget {
   const BarcodeScanScreen({super.key});
 
@@ -19,6 +20,9 @@ class BarcodeScanScreen extends ConsumerStatefulWidget {
       _BarcodeScanScreenState();
 }
 
+/// Manages the state of the barcode scanner screen. It listens to barcode events
+/// and fetches the product from the backend. When the product is fetched, it
+/// navigates to either the product screen or the create product screen.
 class _BarcodeScanScreenState extends ConsumerState<BarcodeScanScreen>
     with WidgetsBindingObserver {
   final MobileScannerController controller = MobileScannerController(
@@ -27,34 +31,31 @@ class _BarcodeScanScreenState extends ConsumerState<BarcodeScanScreen>
   );
 
   late final ProductProvider _productProvider;
-  Barcode? _barcode;
   bool isFetching = false;
   StreamSubscription<Object?>? _subscription;
 
   final supabase = Supabase.instance.client;
 
+  /// Handles the barcode event, by fetching the product from backend.
   void _handleBarcode(BarcodeCapture barcode) {
     if (mounted) {
       final detectedBarcode = barcode.barcodes.firstOrNull;
-
-      print('Barcode detected: $detectedBarcode');
 
       if (detectedBarcode != null &&
           detectedBarcode.displayValue != null &&
           isFetching == false) {
         setState(() {
           isFetching = true;
-          _barcode = detectedBarcode;
         });
 
-        fetchProduct(detectedBarcode.displayValue!)
+        fetchAndDisplayProduct(detectedBarcode.displayValue!)
             .whenComplete(() => setState(() => isFetching = false));
       }
     }
   }
 
-  Future<void> fetchProduct(String barcode) async {
-    print("Fetching product with barcode: $barcode");
+  /// Fetches a product from the database and displays it.
+  Future<void> fetchAndDisplayProduct(String barcode) async {
     try {
       Product product = await _productProvider.fetchProduct(barcode, context);
       if (product.primaryTag == null) {
@@ -74,18 +75,9 @@ class _BarcodeScanScreenState extends ConsumerState<BarcodeScanScreen>
       }
     } catch (e) {
       if (e is FunctionException) {
-        print(e.details);
         if (mounted) context.showSnackBar(e.details['error']);
       }
     }
-  }
-
-  Widget _buildBarcode(Barcode? barcode) {
-    return Text(
-      barcode?.displayValue ?? 'Scan something',
-      overflow: TextOverflow.fade,
-      style: const TextStyle(color: Colors.white),
-    );
   }
 
   @override
