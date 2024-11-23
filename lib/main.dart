@@ -44,7 +44,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Grocy', theme: _theme, home:  _AuthenticationCheckWidget());
+        title: 'Grocy', theme: _theme, home: _AuthenticationCheckWidget());
   }
 }
 
@@ -59,14 +59,18 @@ class _AuthenticationCheckWidget extends ConsumerStatefulWidget {
 }
 
 class _AuthenticationCheck extends ConsumerState<_AuthenticationCheckWidget> {
+  UserProvider? userProvider;
   bool _isAuth = false;
+  Session? currentSession;
   @override
   void initState() {
     Supabase.instance.client.auth.onAuthStateChange.listen((data) {
       final session = data.session;
+      userProvider = ref.read(userNotifier.notifier);
 
       setState(() {
         _isAuth = session != null;
+        currentSession = session;
       });
     });
     super.initState();
@@ -74,84 +78,68 @@ class _AuthenticationCheck extends ConsumerState<_AuthenticationCheckWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final currentSession = supabase.auth.currentSession;
-
-    if (!_isAuth) {
-      return const WelcomePage();
-    } else if (currentSession == null) {
-      return const WelcomePage();
-    } else {
-      final userProvider = ref.read(userNotifier.notifier);
-
-      return FutureBuilder<bool?>(
-        future: userProvider.checkUserName(),
-        builder: (context, snapshot) {
+    if (_isAuth) {
+      return FutureBuilder(
+        future: userProvider!.checkUserName(),
+        builder: (context, AsyncSnapshot<bool?> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasData) {
-            if (snapshot.data == true) {
-              // If Snapshot is true, then the user has a username already and should take them to Tabs direclty.
-              return const TabsContainerScreen();
-            } else if (snapshot.data == null) {
-              return const WelcomePage();
-            } else {
-              // The username is empty, should therefore prompt them to choose a username.
-              WidgetsBinding.instance.addPostFrameCallback((_) async {
-                final dialogUsernameController = TextEditingController();
-
-                await showDialog(
+            return CircularProgressIndicator();
+          } else if (snapshot.data == null) {
+            supabase.auth.signOut();
+            return CircularProgressIndicator();
+          } else if (snapshot.data == false) {
+            WidgetsBinding.instance.addPostFrameCallback((_) async {
+              await showDialog(
                   context: context,
                   barrierDismissible: false,
-                  builder: (BuildContext context) {
-                    return AlertDialog(
-                      title: const Text('Set Your Username'),
-                      content: TextField(
-                        controller: dialogUsernameController,
-                        decoration: const InputDecoration(
-                          hintText: 'Enter a username, minimum 5 characters',
-                        ),
-                      ),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () async {
-                            final username =
-                                dialogUsernameController.text.trim();
-                            if (username.isEmpty || username.length < 5) {
-                              context.showSnackBar(
-                                'Username cannot be empty or less than 5 characters!',
-                              );
-                              return;
-                            }
-                            try {
-                              await userProvider.updateProfile(username);
-
-                              if (context.mounted) {
-                                // Navigate to TabsContainerScreen after a successful username update.
-                                Navigator.of(context)
-                                    .pop(); // Close the dialog after.
-                              }
-                            } catch (error) {
-                              if (context.mounted) {
-                                context.showSnackBar(
-                                    'Unable to update user profile: $error');
-                              }
-                            }
-                          },
-                          child: const Text('Submit'),
-                        ),
-                      ],
-                    );
-                  },
-                );
-              });
-
-              return const TabsContainerScreen();
-            }
-          } else {
-            return Center(child: Text('Error: ${snapshot.error}'));
+                  builder: (BuildContext context) => showUsernameDialog(context)
+              );
+            });
           }
-        },
+          return TabsContainerScreen();
+        }
       );
+    } else {
+      return WelcomePage();
     }
+  }
+
+  Widget showUsernameDialog(BuildContext context) {
+    final dialogUsernameController = TextEditingController();
+    return AlertDialog(
+      title: const Text('Set Your Username'),
+      content: TextField(
+        controller: dialogUsernameController,
+        decoration: const InputDecoration(
+          hintText: 'Enter a username, minimum 5 characters',
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () async {
+            final username = dialogUsernameController.text.trim();
+            if (username.isEmpty || username.length < 5) {
+              context.showSnackBar(
+                'Username cannot be empty or less than 5 characters!',
+              );
+              return;
+            }
+            try {
+              await userProvider!.updateProfile(username);
+
+              if (context.mounted) {
+                // Navigate to TabsContainerScreen after a successful username update.
+                Navigator.of(context).pop(); // Close the dialog after.
+              }
+            } catch (error) {
+              if (context.mounted) {
+                context.showSnackBar('Unable to update user profile: $error');
+              }
+            }
+          },
+          child: const Text('Submit'),
+        ),
+      ],
+    );
   }
 }

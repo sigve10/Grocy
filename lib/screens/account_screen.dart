@@ -105,11 +105,7 @@ class _AccountPageState extends ConsumerState<AccountPage> {
     try {
       await supabase.auth.signOut();
       if (mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const WelcomePage()),
-          ModalRoute.withName('/'),
-        );
+        Navigator.of(context, rootNavigator: true).pop();
       }
     } on AuthException catch (error) {
       if (mounted) context.showSnackBar(error.message, isError: true);
