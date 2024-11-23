@@ -94,6 +94,11 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
   /// Calls a custom function from supabase RPC function,
   /// which takes the average of the ratings.
   Future<Rating> getReviewSummary(String ean) async {
+    double? parseInput(dynamic value) {
+      if (value == null) return null;
+      return value is int ? value.toDouble() : value as double?;
+    }
+
     Rating result = Rating(productEan: ean);
 
     final query =
@@ -102,10 +107,10 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
     try {
       final response = await query;
       print(response);
-      result.customerSatisfactionRating = response["customer_satisfaction"] as double?;
-      result.labelAccuracyRating = response["label_accuracy"] as double?;
-      result.priceRating = response["price_accuracy"] as double?;
-      result.consistencyRating = response["consistency"] as double?;
+      result.customerSatisfactionRating = parseInput(response["customer_satisfaction"]);
+      result.labelAccuracyRating = parseInput(response["label_accuracy"]);
+      result.priceRating = parseInput(response["price_accuracy"]);
+      result.consistencyRating = parseInput(response["consistency"]);
     } catch (error) {
       debugPrint('Error fetch reviews from the reviews table, $error');
     }
