@@ -109,16 +109,16 @@ class _AuthenticationCheck extends ConsumerState<_AuthenticationCheckWidget> {
       content: TextField(
         controller: dialogUsernameController,
         decoration: const InputDecoration(
-          hintText: 'Enter a username, minimum 5 characters',
+          hintText: 'Enter a username, minimum 3 characters',
         ),
       ),
       actions: <Widget>[
         TextButton(
           onPressed: () async {
             final username = dialogUsernameController.text.trim();
-            if (username.isEmpty || username.length < 5) {
+            if (username.isEmpty || username.length <= 3) {
               context.showSnackBar(
-                'Username cannot be empty or less than 5 characters!',
+                'Username cannot be empty or less than 3 characters!',
               );
               return;
             }

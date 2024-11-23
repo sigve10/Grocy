@@ -76,10 +76,10 @@ class _AccountPageState extends ConsumerState<AccountPage> {
     final username = _usernameController.text.trim();
 
     // Now there's actual feedback when user tries to create an invalid username :)
-    if (username.isEmpty || username.length < 5) {
+    if (username.isEmpty || username.length <= 3) {
       if (mounted) {
         context.showSnackBar(
-          'Username cannot be empty or less than 5 characters!',
+          'Username cannot be empty or less than 3 characters!',
         );
       }
       setState(() {
