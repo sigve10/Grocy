@@ -142,7 +142,7 @@ class _WelcomePageState extends State<WelcomePage> {
             const Text('Or'),
             const SizedBox(height: 15),
             ElevatedButton(
-              style: ButtonStyles.filled,
+              style: ButtonStyles.outlined,
               onPressed: () {
                 setState(() {
                   _isRegistered = !_isRegistered;
