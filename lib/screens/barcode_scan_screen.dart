@@ -59,19 +59,23 @@ class _BarcodeScanScreenState extends ConsumerState<BarcodeScanScreen>
     try {
       Product product = await _productProvider.fetchProduct(barcode, context);
       if (product.primaryTag == null) {
-        await Navigator.push(
+        if (mounted) {
+          await Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => CreateProductScreen(
+                        product: product,
+                      )));
+        }
+      } else {
+        if (mounted) {
+          await Navigator.push(
             context,
             MaterialPageRoute(
-                builder: (context) => CreateProductScreen(
-                      product: product,
-                    )));
-      } else {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ProductScreen(product: product),
-          ),
-        );
+              builder: (context) => ProductScreen(product: product),
+            ),
+          );
+        }
       }
     } catch (e) {
       if (e is FunctionException) {

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:grocy/main.dart';
-import 'account_screen.dart';
 import 'package:grocy/extentions/snackbar_context.dart';
 import 'package:grocy/styling/button_styles.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

@@ -187,7 +187,7 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
 
     try {
       // Update the review in the "reviews" table
-      final response = await supabase
+          await supabase
           .from('reviews')
           .update(updatedReview)
           .match({'user_id': userId, 'product_ean': updatedRating.productEan});
