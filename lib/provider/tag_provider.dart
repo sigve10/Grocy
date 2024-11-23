@@ -35,22 +35,40 @@ class TagNotifier extends StateNotifier<List<Tag>> {
     }
   }
 
-  /// Adds a tag to the 'tags' table, linking it to a specific product.
-  Future<bool> addTagToProduct(Tag tag, String productEan) async {
+  Future<bool> createTag(Tag tag) async {
     try {
-      debugPrint('Adding/upserting tag: ${tag.toJson()} into tags table');
+      final doesTagExistResponse = await supabase.from("tags")
+          .select("name")
+          .ilike("name", tag.name)
+          .maybeSingle();
 
-      /// Add the tag to the tags table
-      final tagResponse = await supabase.from('tags').upsert({
+      final bool doesTagExist = doesTagExistResponse != null;
+
+      if (doesTagExist) {
+        debugPrint('Tag already exists');
+        return false;
+      }
+
+      await supabase.from('tags').insert({
         'name': tag.name,
         'primary_tag': tag.primaryTag,
       }).select();
 
+      return true;
+    } catch (error, stackTrace) {
+      debugPrint('Error creating tag: $error');
+      debugPrint('StackTrace: $stackTrace');
+      return false;
+    }
+  }
+
+  /// Adds a tag to the 'tags' table, linking it to a specific product.
+  Future<bool> addTagToProduct(Tag tag, String productEan) async {
+    try {
       /// Link the tag to the product
       debugPrint('Linking tag: ${tag.name} to product: $productEan');
 
-      /// TODO: remove unused local variable, can just use await? I think.
-      final productTagResponse = await supabase.from('product_tags').insert({
+      await supabase.from('product_tags').insert({
         'product_ean': productEan,
         'tag_name': tag.name,
       }).select();

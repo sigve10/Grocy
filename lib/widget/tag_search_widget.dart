@@ -43,7 +43,7 @@ class _TagSearchWidgetState extends ConsumerState<TagSearchWidget> {
       ref.read(tagProvider.notifier).fetchTags();
       if (mounted) {
         context.showSnackBar(
-          'Tag fetched successfully',
+          'Tag added successfully',
         );
       }
     } else {
@@ -156,63 +156,76 @@ class _TagSearchWidgetState extends ConsumerState<TagSearchWidget> {
     }
 
     String newTagName = '';
+    String? errorText;
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Create New Tag'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  onChanged: (value) {
-                    newTagName = value;
-                  },
-                  decoration: const InputDecoration(
-                    labelText: "Tag Name",
-                    hintText: "fruit",
-                  ),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  enabled: false,
-                  decoration: InputDecoration(
-                    labelText: 'Primary Tag',
-                    floatingLabelBehavior: FloatingLabelBehavior.always,
-                    hintText: primaryTag,
-                    helperText: "Auto-filled",
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8.0),
+        return StatefulBuilder(
+          builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Create New Tag'),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    onChanged: (value) {
+                      newTagName = value;
+                      errorText = null;
+                    },
+                    decoration: InputDecoration(
+                      labelText: "Tag Name",
+                      hintText: "fruit",
+                      errorText: errorText
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  TextField(
+                    enabled: false,
+                    decoration: InputDecoration(
+                      labelText: 'Primary Tag',
+                      floatingLabelBehavior: FloatingLabelBehavior.always,
+                      hintText: primaryTag,
+                      helperText: "Auto-filled",
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Cancel'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              child: const Text('Create'),
-              onPressed: () {
-                if (newTagName.trim().isNotEmpty) {
-                  _createNewTag(newTagName.trim(), productEan!);
+            actions: <Widget>[
+              TextButton(
+                child: const Text('Cancel'),
+                onPressed: () {
                   Navigator.of(context).pop();
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Tag name cannot be empty')),
-                  );
+                },
+              ),
+              TextButton(
+                child: const Text('Create'),
+                onPressed: () {
+                  if (newTagName.trim().isNotEmpty) {
+                    final tags = ref.read(tagProvider);
+                    if (tags.any((element) => element.name.toLowerCase() != newTagName.toLowerCase())) {
+                      _createNewTag(newTagName.trim(), productEan!);
+                      Navigator.of(context).pop();
+                    } else {
+                      setState(() {
+                        errorText = 'Tag already exists';
+                      });
+                    }
+                  } else {
+                    setState(() {
+                      errorText = 'Tag name cannot be empty';
+                    });
+                  }
                 }
-              },
-            ),
-          ],
-        );
+              ),
+            ],
+          );
+        });
       },
     );
   }
@@ -230,14 +243,14 @@ class _TagSearchWidgetState extends ConsumerState<TagSearchWidget> {
     Tag newTag = Tag(name: name, primaryTag: widget.primaryTag);
     bool success = await ref
         .read(tagProvider.notifier)
-        .addTagToProduct(newTag, productEan);
+        .createTag(newTag);
 
     if (success) {
       widget.onTagSelected(newTag);
       ref.read(tagProvider.notifier).fetchTags();
       if (mounted) {
         context.showSnackBar(
-          'Successfully added tag',
+          'Successfully created tag',
         );
       }
     } else {
