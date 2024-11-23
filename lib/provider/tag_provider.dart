@@ -54,6 +54,8 @@ class TagNotifier extends StateNotifier<List<Tag>> {
         'primary_tag': tag.primaryTag,
       }).select();
 
+      fetchTags();
+
       return true;
     } catch (error, stackTrace) {
       debugPrint('Error creating tag: $error');
