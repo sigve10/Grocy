@@ -21,9 +21,15 @@ class UserProvider extends StateNotifier<Map<String, dynamic>> {
     final query = supabase.from('profiles')
       .select()
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
     try {
       final data = await query;
+
+      if (data == null) {
+        supabase.auth.signOut();
+        return null;
+      }
+
       state = data;
       return data;
     } on PostgrestException catch (error) {
