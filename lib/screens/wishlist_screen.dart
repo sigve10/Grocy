@@ -25,7 +25,16 @@ class WishlistScreenState extends ConsumerState<WishlistScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Wishlist'),
+        title: const Padding(
+          padding: EdgeInsets.only(top: 20),
+          child: Text(
+            'Wishlist',
+            style: TextStyle(
+              fontSize: 32,
+            ),
+          ),
+        ),
+        toolbarHeight: 80,
       ),
       body: Column(
         children: [

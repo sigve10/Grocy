@@ -5,6 +5,7 @@ import 'package:grocy/widget/product_tile.dart';
 import 'package:grocy/widget/search_widget.dart';
 import '../models/product.dart';
 
+/// Displays a list of products with search functionality through [SearchWidget].
 class ProductList extends ConsumerStatefulWidget {
   const ProductList({super.key});
 
@@ -12,7 +13,7 @@ class ProductList extends ConsumerStatefulWidget {
   ProductListState createState() => ProductListState();
 }
 
-// The state of the ProductList widget.
+/// The state of the ProductList widget.
 class ProductListState extends ConsumerState<ProductList> {
   // Holds a list from supabase that updates (through queries etc)
 
@@ -30,6 +31,7 @@ class ProductListState extends ConsumerState<ProductList> {
     return Scaffold(
       body: Column(
         children: [
+          SizedBox(height: 35),
           SearchWidget(),
           Expanded(
             child: ListView.builder(

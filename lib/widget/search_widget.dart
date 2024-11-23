@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:grocy/provider/product_provider.dart';
 import 'package:grocy/provider/search_provider.dart';
 import 'package:grocy/provider/tag_provider.dart';
 import 'package:grocy/models/tag.dart';
 import 'package:grocy/screens/account_screen.dart';
 
+/// Widget which allows search functionality to the searchbar for both products and tags.
 class SearchWidget extends ConsumerStatefulWidget {
   const SearchWidget({super.key});
 
@@ -22,11 +22,13 @@ class _SearchWidgetState extends ConsumerState<SearchWidget> {
     super.initState();
   }
 
+  /// Updates the search term, updating the search provider with the new term.
   void setSearchTerm(String newTerm) {
     _searchProvider.setSearchTerm(newTerm);
 
   }
 
+  /// Sets the main tag, updating the search provider with the new tag selected.
   void setMainTag(Tag? newTag) {
     _searchProvider.setMainTag(newTag);
   }
@@ -41,8 +43,6 @@ class _SearchWidgetState extends ConsumerState<SearchWidget> {
           onPressed: () {
             Navigator.push(
               context,
-              //TODO: after merge, fix session checks so that if you are ot logged in, you are sent to welcome screen
-              //TODO: fix navigating back to home from account page, other than the "back" arrow. Home button should navigate you back
               MaterialPageRoute(builder: (context) => const AccountPage()),
             );
           },
@@ -90,11 +90,13 @@ class _SearchWidgetMainTagsState extends ConsumerState<_SearchWidgetMainTags> {
     super.initState();
   }
 
+  /// Checks if a [tag] is currently selected as main [tag] or not.
   bool isTagSelected(Tag tag) {
     // Changed it because the == didn't quite work with the parsing.
     return selectedMainTag?.name == tag.name;
   }
 
+  /// Sets the main tag. Updates ui with the tag selected.
   void setTagCategory(Tag? selected) {
     setState(() {
       selectedMainTag = selected;
@@ -169,7 +171,7 @@ class _SearchWidgetUserTagsState extends ConsumerState<_SearchWidgetUserTags> {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+      padding: const EdgeInsets.symmetric(vertical: 16  , horizontal: 24),
       child: Column(children: [
         Autocomplete<Tag>(
           optionsBuilder: (TextEditingValue textEditingValue) {

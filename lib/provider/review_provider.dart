@@ -16,7 +16,8 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
   Future<List<Rating>> fetchRatings(Iterable<String> eans) async {
     late final List<Rating> reviews;
 
-    final query = supabase.from('reviews')
+    final query = supabase
+        .from('reviews')
         .select()
         .inFilter("product_ean", eans.toList());
     try {
@@ -32,15 +33,17 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
     return reviews;
   }
 
+  /// Fetch all reviews connected to a product,
+  /// filtering out products whose content is null.
   Future<List<Rating>> fetchReviews(String ean) async {
     late final List<Rating> reviews;
     print("Just give me the fricking exe");
 
     final query = supabase
-      .from("reviews")
-      .select()
-      .eq("product_ean", ean)
-      .not("content", "is", null);
+        .from("reviews")
+        .select()
+        .eq("product_ean", ean)
+        .not("content", "is", null);
 
     try {
       final response = await query;
@@ -56,6 +59,8 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
     return reviews;
   }
 
+  /// Fetch a single review from the database for one specific user.
+  /// Matches a product's [ean] to the user via their [userId].
   Future<Rating?> fetchReview(String ean, String? userId) async {
     userId = userId ?? supabase.auth.currentUser?.id;
 
@@ -65,11 +70,12 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
 
     late final Rating rating;
 
-    final query = supabase.from("reviews")
-      .select()
-      .eq("user_id", userId)
-      .eq("product_ean", ean)
-      .maybeSingle();
+    final query = supabase
+        .from("reviews")
+        .select()
+        .eq("user_id", userId)
+        .eq("product_ean", ean)
+        .maybeSingle();
 
     try {
       final response = await query;
@@ -77,17 +83,21 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
       if (response == null) return null;
 
       rating = Rating.fromJson(response);
-    } catch(error) {
+    } catch (error) {
       debugPrint('Error fetch reviews from the reviews table, $error');
     }
 
     return rating;
   }
 
+  /// Retrieves a review's summary for a specified product.
+  /// Calls a custom function from supabase RPC function,
+  /// which takes the average of the ratings.
   Future<Rating> getReviewSummary(String ean) async {
     Rating result = Rating(productEan: ean);
 
-    final query = supabase.rpc("get_summary_of_reviews", params: {"ean": ean}).single();
+    final query =
+        supabase.rpc("get_summary_of_reviews", params: {"ean": ean}).single();
 
     try {
       final response = await query;
@@ -105,14 +115,11 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
     return result;
   }
 
-  //TODO: implement fetch reviews for the product only in product screen, probably isn't a problem but ya know
-
   /// Adds a review to the database via the authenticated user.
   Future<void> addReview(Rating rating) async {
     // Get the user that's authenticated / logged in user
     final user = supabase.auth.currentUser;
 
-    // Improve this piece, snackbar message? dialog? something. Temporary.
     if (user == null) {
       throw Exception('User not logged in');
     }
@@ -153,8 +160,7 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
     final user = supabase.auth.currentUser;
 
     if (user == null) {
-      debugPrint('User er null her, test metode mer hvis det skjer');
-      throw Exception('user not logged in'); //midlertidig før commit
+      throw Exception('user not logged in');
     }
     debugPrint('the user is $user');
     final userId = user.id; // The UUID of the auth user, from auth.currentUser.
@@ -203,12 +209,7 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
           .update(updatedReview)
           .match({'user_id': userId, 'product_ean': updatedRating.productEan});
 
-      if (response.error != null) {
-        debugPrint('Error updating review: ${response.error!.message}');
-        return;
-      }
-
-      debugPrint('Review has been updated successfully: $response');
+      debugPrint('Review updated successfully: $response');
 
       // Update the state after the database operation actually goes through.
       state = state.map((review) {
@@ -219,8 +220,10 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
         }
         return review;
       }).toList();
+    } on PostgrestException catch (error) {
+      debugPrint('Error updating review: ${error.message}');
     } catch (error) {
-      debugPrint('Error updating fjordkraft: $error');
+      debugPrint('Unexpected error with updating review: $error');
     }
   }
 }

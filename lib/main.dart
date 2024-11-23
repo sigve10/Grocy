@@ -42,7 +42,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Grocy', theme: _theme, home: const AuthenticationCheck());
+        title: 'Grocy', theme: _theme, home: const _AuthenticationCheck());
   }
 }
 
@@ -50,8 +50,8 @@ class MyApp extends StatelessWidget {
 /// - If user is not authenticated, they are sent to the welcome page that lets them either sign in/ or up.
 /// - If the user doesn't have a username (freshly signed up) then they are given a dialog to choose their username.
 /// - If the user is authenticated and has a username, they are sent directly to the TabsContainerScreen.
-class AuthenticationCheck extends ConsumerWidget {
-  const AuthenticationCheck({super.key});
+class _AuthenticationCheck extends ConsumerWidget {
+  const _AuthenticationCheck(); // no need for key since it is private
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -94,11 +94,8 @@ class AuthenticationCheck extends ConsumerWidget {
                             final username =
                                 dialogUsernameController.text.trim();
                             if (username.isEmpty || username.length < 5) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                      'Username cannot be empty or less than 5 characters'),
-                                ),
+                              context.showSnackBar(
+                                'Username cannot be empty or less than 5 characters!',
                               );
                               return;
                             }

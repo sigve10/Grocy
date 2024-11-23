@@ -4,6 +4,7 @@ import 'package:grocy/models/product.dart';
 import 'package:grocy/models/rating.dart';
 import 'package:grocy/provider/review_provider.dart';
 
+/// A screen which allows users to leave a review for the selected product.
 class LeaveReviewScreen extends ConsumerStatefulWidget {
   final Product product;
   final Function? onReviewLeft;
@@ -13,6 +14,8 @@ class LeaveReviewScreen extends ConsumerStatefulWidget {
   LeaveReviewScreenState createState() => LeaveReviewScreenState();
 }
 
+/// State class for the [LeaveReviewScreen]
+/// Manages UI state for the review process.
 class LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
   final Map<String, int?> ratings = {
     "Customer Satisfaction": null,
@@ -36,6 +39,7 @@ class LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
     super.dispose();
   }
 
+  /// Fetches an existing review for a user if available.
   Future<void> getOldReview() async {
     final Rating? oldReview = await reviewProvider.fetchReview(widget.product.ean, null);
     if (oldReview != null) {
@@ -58,6 +62,7 @@ class LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
     });
   }
 
+  /// Adds a review from a user to a product.
   void leaveReview() async {
     final reviewText = _reviewController.text;
 
@@ -72,8 +77,9 @@ class LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
     if (widget.onReviewLeft != null) {
       widget.onReviewLeft!();
     }
-
+    if (mounted) {
     Navigator.pop(context);
+    }
   }
 
   @override
@@ -88,10 +94,7 @@ class LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                "Avocado",
-                style: TextStyle(fontSize: 18),
-              ),
+              Text(widget.product.name,),
               const SizedBox(height: 20),
               ...ratings.keys.map((category) {
                 return Padding(

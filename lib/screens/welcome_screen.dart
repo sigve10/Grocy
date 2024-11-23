@@ -27,67 +27,66 @@ class _WelcomePageState extends State<WelcomePage> {
   ///
   /// - If '_isRegistered' is 'false', it gives user feedback to confirm sign up via email.
   /// - If '_isRegistered' is 'true', it gives user feedback to sign in via email.
-Future<void> _handleAuth() async {
-  final action = _isRegistered ? 'New User? Create Account' : 'Sign In';
+  Future<void> _handleAuth() async {
+    final action = _isRegistered ? 'New User? Create Account' : 'Sign In';
 
-  setState(() {
-    _isLoading = true;
-  });
+    setState(() {
+      _isLoading = true;
+    });
 
-  final email = _emailController.text.trim().toLowerCase();
-  // Because the message should never be null, I am not using String? here.
-  String message = '';
+    final email = _emailController.text.trim().toLowerCase();
+    // Because the message should never be null, I am not using String? here.
+    String message = '';
 
-  try {
-    // Check if the email exists in the "profiles" table
-    final response = await supabase
-        .from('profiles')
-        .select('email')
-        .ilike('email', email)
-        .maybeSingle();
+    try {
+      // Check if the email exists in the "profiles" table
+      final response = await supabase
+          .from('profiles')
+          .select('email')
+          .ilike('email', email)
+          .maybeSingle();
 
-    if (response != null && _isRegistered) {
-      message = 'This email is already registered. Please sign in instead.';
-    } else if (response == null && !_isRegistered) {
-      message = 'No account found for this email. Please sign up.';
-    } else {
-      try {
-        await supabase.auth.signInWithOtp(
-          email: email,
-          emailRedirectTo:
-              kIsWeb ? null : 'io.supabase.flutterquickstart://login-callback/',
-        );
-        message = _isRegistered
-            ? 'Check your email to confirm sign up!'
-            : 'Check your email for a login link!';
-        _emailController.clear();
-      } on AuthException catch (error) {
-        message = '$action failed: ${error.message}';
+      if (response != null && _isRegistered) {
+        message = 'This email is already registered. Please sign in instead.';
+      } else if (response == null && !_isRegistered) {
+        message = 'No account found for this email. Please sign up.';
+      } else {
+        try {
+          await supabase.auth.signInWithOtp(
+            email: email,
+            emailRedirectTo: kIsWeb
+                ? null
+                : 'io.supabase.flutterquickstart://login-callback/',
+          );
+          message = _isRegistered
+              ? 'Check your email to confirm sign up!'
+              : 'Check your email for a login link!';
+          _emailController.clear();
+        } on AuthException catch (error) {
+          message = '$action failed: ${error.message}';
+        }
+      }
+
+      if (mounted) {
+        context.showSnackBar(message,
+            isError: message.startsWith('$action failed'));
+      }
+    } on PostgrestException catch (error) {
+      if (mounted) {
+        context.showSnackBar('$action failed: ${error.message}', isError: true);
+      }
+    } catch (error) {
+      if (mounted) {
+        context.showSnackBar('Unexpected error during $action', isError: true);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
-
-    if (mounted) {
-      context.showSnackBar(message, isError: message.startsWith('$action failed'));
-    }
-  } on PostgrestException catch (error) {
-    if (mounted) {
-      context.showSnackBar('$action failed: ${error.message}', isError: true);
-    }
-  } catch (error) {
-    if (mounted) {
-      context.showSnackBar('Unexpected error during $action', isError: true);
-    }
-  } finally {
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
-    }
   }
-}
-
-
-
 
   @override
   void initState() {
@@ -141,11 +140,9 @@ Future<void> _handleAuth() async {
             'Welcome',
             style: TextStyle(
               fontSize: 32,
-              fontWeight: FontWeight.bold,
             ),
           ),
         ),
-        centerTitle: true,
         toolbarHeight: 80,
       ),
       body: Center(
@@ -155,15 +152,14 @@ Future<void> _handleAuth() async {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: SizedBox(
-                width:
-                    350, //temporary width. TODO: discuss with group on sizing for this.
+                width: 350,
                 child: TextFormField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   decoration: const InputDecoration(
                     labelText: 'Email',
                     labelStyle: TextStyle(fontSize: 18),
-                    hintText: 'Olenormann@hotmail.com',
+                    hintText: 'Olenordmann@hotmail.com',
                   ),
                 ),
               ),

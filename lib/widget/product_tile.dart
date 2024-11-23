@@ -5,6 +5,8 @@ import 'package:grocy/models/rating.dart';
 import 'package:grocy/provider/review_provider.dart';
 import 'package:grocy/screens/product_screen.dart';
 
+/// Widget for displaying product details in a tile format via [ClipRRect].
+/// Shows the product's image, name and amount of reviews for the given product.
 class ProductTile extends ConsumerWidget {
   final Product product;
   final Widget? append;

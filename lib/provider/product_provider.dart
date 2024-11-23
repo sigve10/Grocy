@@ -14,15 +14,16 @@ import '../models/tag.dart';
 final productProvider = StateNotifierProvider<ProductProvider, List<Product>>(
     (ref) => ProductProvider(ref));
 
+/// State notifier for managing products in the database.
 class ProductProvider extends StateNotifier<List<Product>> {
   final Ref ref;
   ProductProvider(this.ref) : super(const []) {
     ref.listen(searchProvider, (oldValue, newValue) {
-      print("Provider updated");
       fetchProducts();
     });
   }
 
+  /// Fetches one product via its barcode.
   Future<Product> fetchProduct(String barcode, context) async {
     final res = await supabase.functions.invoke("fetch-product",
         body: {"ean": barcode},
@@ -39,6 +40,7 @@ class ProductProvider extends StateNotifier<List<Product>> {
     return product;
   }
 
+  /// Adds a new product to the database.
   void addProduct(Product product) async {
     await supabase.from('products').insert({
       'ean': product.ean,
@@ -49,10 +51,9 @@ class ProductProvider extends StateNotifier<List<Product>> {
     });
   }
 
+  /// Fetches a list of products, fitting the query parameters.
   void fetchProducts() async {
     SearchState searchState = ref.read(searchProvider);
-
-    print(searchState.userTags.map((e) => e.name).toList());
 
     Map<String, dynamic> queryParams = {
       "i_search_term": searchState.searchText,
@@ -79,6 +80,7 @@ class ProductProvider extends StateNotifier<List<Product>> {
     }
   }
 
+  /// Fetches all the tags connected to the specific product.
   Future<List<Tag>> fetchTagsForProduct(String productEan) async {
     final response = await supabase
         .from('product_tags')

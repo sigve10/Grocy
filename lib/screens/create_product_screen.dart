@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:grocy/models/tag.dart';
 import 'package:grocy/provider/tag_provider.dart';
 import 'package:grocy/screens/product_screen.dart';
-
 import '../models/product.dart';
 import '../provider/product_provider.dart';
 
+/// Screen which allows user to add a product (with associated tag) to the database.
 class CreateProductScreen extends ConsumerStatefulWidget {
   const CreateProductScreen({super.key, required this.product});
 
@@ -17,6 +17,8 @@ class CreateProductScreen extends ConsumerStatefulWidget {
       CreateProductScreenState();
 }
 
+/// State class for [CreateProductScreen]
+/// Manages the user interaction with the create product screen.
 class CreateProductScreenState extends ConsumerState<CreateProductScreen> {
   late final ProductProvider _productProvider;
 
@@ -25,6 +27,7 @@ class CreateProductScreenState extends ConsumerState<CreateProductScreen> {
   final TextEditingController eanController = TextEditingController();
   Tag? selectedPrimaryTag;
 
+  /// Handles the submission of a product.
   void onSubmit() async {
     if (selectedPrimaryTag != null) {
       final product = Product(
@@ -44,6 +47,7 @@ class CreateProductScreenState extends ConsumerState<CreateProductScreen> {
     }
   }
 
+  /// Cancels the product creation, navigating user the back.
   void onCancel() {
     Navigator.pop(context);
   }
