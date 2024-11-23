@@ -38,6 +38,7 @@ class _SearchWidgetState extends ConsumerState<SearchWidget> {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: ExpansionTile(
+        maintainState: true,
         controlAffinity: ListTileControlAffinity.leading,
         trailing: IconButton(
           onPressed: () {
