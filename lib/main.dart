@@ -51,7 +51,6 @@ class MyApp extends StatelessWidget {
 /// - If user is not authenticated, they are sent to the welcome page that lets them either sign in/ or up.
 /// - If the user doesn't have a username (freshly signed up) then they are given a dialog to choose their username.
 /// - If the user is authenticated and has a username, they are sent directly to the TabsContainerScreen.
-
 class _AuthenticationCheckWidget extends ConsumerStatefulWidget {
   @override
   ConsumerState<ConsumerStatefulWidget> createState() => _AuthenticationCheck();

@@ -141,7 +141,7 @@ class _WelcomePageState extends State<WelcomePage> {
             const SizedBox(height: 15),
             const Text('Or'),
             const SizedBox(height: 15),
-            ElevatedButton(
+            OutlinedButton(
               style: ButtonStyles.outlined,
               onPressed: () {
                 setState(() {
