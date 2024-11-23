@@ -3,6 +3,7 @@ import 'package:grocy/screens/barcode_scan_screen.dart';
 import 'package:grocy/screens/product_list.dart';
 import 'package:grocy/screens/wishlist_screen.dart';
 
+/// A bottom tabs container which manages the navigation between the tabs.
 class TabsContainerScreen extends StatefulWidget {
   const TabsContainerScreen({super.key});
 
@@ -28,6 +29,7 @@ class _TabsContainerScreenState extends State<TabsContainerScreen> {
     2: GlobalKey<NavigatorState>()
   };
 
+  /// 'Gets' the active page for the selected tab.
   Widget getActivePage() {
     return Navigator(
       key: navKeys[_selectedPageIndex],

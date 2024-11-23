@@ -1,6 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+/// Model for a product review.
 class Rating {
   String userId;
   final String productEan;
@@ -35,6 +35,8 @@ class Rating {
     return totalRating / nonNullRatings;
   }
 
+  /// Generates a list of displayable ratings through mapping
+  /// a label to a type of rating.
   List<Map<String, dynamic>> get displayable {
     return [
       {
@@ -74,6 +76,7 @@ class Rating {
       ..consistencyRating = (json['consistency'] as num?)?.toDouble();
   }
 
+  /// Generates a row for stars that represents the rating.
   static Widget getStarRating(double stars, {Color? color}) {
     const double starSize = 20;
     Color starColor = color ?? Colors.amber;

@@ -9,9 +9,11 @@ import '../provider/product_provider.dart';
 import '../provider/tag_provider.dart';
 import '../widget/tag_search_widget.dart';
 import 'package:grocy/provider/wishlist_provider.dart';
+import 'package:grocy/extentions/snackbar_context.dart';
 import 'leave_review_screen.dart';
 
 /// The screen that displays the details of a product.
+/// Including reviews and rating section.
 class ProductScreen extends ConsumerStatefulWidget {
   const ProductScreen({
     super.key,
@@ -53,10 +55,13 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
     });
   }
 
+  /// Fetches all reviews for the given product from database, as well as the review's summary.
   void getReviews() async {
     final reviewNotifierInstance = ref.read(reviewNotifier.notifier);
-    final statelessRatingSummary = await reviewNotifierInstance.getReviewSummary(widget.product.ean);
-    final statelessReviews = await reviewNotifierInstance.fetchReviews(widget.product.ean);
+    final statelessRatingSummary =
+        await reviewNotifierInstance.getReviewSummary(widget.product.ean);
+    final statelessReviews =
+        await reviewNotifierInstance.fetchReviews(widget.product.ean);
     setState(() {
       ratingSummary = statelessRatingSummary;
       reviews = statelessReviews;
@@ -76,13 +81,13 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
       WishlistProvider wishlistProvider = ref.read(wishlistNotifier.notifier);
       if (isFavorite) {
         wishlistProvider.deleteProductFromWishlist(widget.product);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Removed from wishlist')),
+        context.showSnackBar(
+          'Removed from wishlist',
         );
       } else {
         wishlistProvider.addProductToWishlist(widget.product);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Added to wishlist')),
+        context.showSnackBar(
+          'Added to wishlist',
         );
       }
       isFavorite = !isFavorite;
@@ -93,9 +98,10 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
     final productPrimaryTag = widget.product.primaryTag;
 
     if (productPrimaryTag == null || productPrimaryTag.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Product does not have a primary tag.')),
+      context.showSnackBar(
+        'Product does not have a primary tag',
       );
+
       return;
     }
 
@@ -147,9 +153,11 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
       tags = updatedTags;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Tag "${tag.name}" added successfully')),
-    );
+    if (mounted) {
+      context.showSnackBar(
+        'Tag "${tag.name}" added successfully',
+      );
+    }
   }
 
   /// Handle tag selection from SearchWidget.
@@ -197,7 +205,10 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                       isFavorite ? Icons.favorite : Icons.favorite_border,
                       color: isFavorite
                           ? Theme.of(context).colorScheme.primary
-                          : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                          : Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withOpacity(0.6),
                       semanticLabel: isFavorite
                           ? 'Remove from wishlist'
                           : 'Add to wishlist',
@@ -269,9 +280,9 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
             ),
 
             RatingsSection(
-                product: widget.product,
-                onReviewLeft: getReviews,
-                rating: ratingSummary,
+              product: widget.product,
+              onReviewLeft: getReviews,
+              rating: ratingSummary,
             ),
 
             const SizedBox(height: 24),
@@ -299,10 +310,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                   const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              children: [
-                for (Rating rating in reviews)
-                  Review(rating: rating)
-              ],
+              children: [for (Rating rating in reviews) Review(rating: rating)],
             )
           ],
         ),
@@ -317,12 +325,11 @@ class RatingsSection extends StatelessWidget {
   final Product product;
   final Function onReviewLeft;
 
-  const RatingsSection({
-    super.key,
-    required this.rating,
-    required this.product,
-    required this.onReviewLeft
-  });
+  const RatingsSection(
+      {super.key,
+      required this.rating,
+      required this.product,
+      required this.onReviewLeft});
 
   List<Widget> createRatings() {
     final List<Widget> retval = [];
@@ -378,11 +385,8 @@ class RatingsSection extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) =>
-                            LeaveReviewScreen(
-                              product: product,
-                              onReviewLeft: onReviewLeft
-                            ),
+                        builder: (context) => LeaveReviewScreen(
+                            product: product, onReviewLeft: onReviewLeft),
                       ),
                     );
                   },
@@ -395,6 +399,7 @@ class RatingsSection extends StatelessWidget {
   }
 }
 
+/// A widget for displaying individual user reviews for the product.
 class Review extends ConsumerStatefulWidget {
   final Rating rating;
   const Review({required this.rating, super.key});
@@ -403,6 +408,7 @@ class Review extends ConsumerStatefulWidget {
   ConsumerState<ConsumerStatefulWidget> createState() => ReviewState();
 }
 
+/// State class for the [Review] widget.
 class ReviewState extends ConsumerState<Review> {
   static const maxReviewLines = 2;
   late final UserProvider userProvider;
@@ -486,9 +492,9 @@ class ReviewState extends ConsumerState<Review> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(currentRating["label"]),
-                    currentRating["value"] == null ?
-                      Rating.getStarRating(0, color: Colors.grey) :
-                      Rating.getStarRating(currentRating["value"] as double)
+                    currentRating["value"] == null
+                        ? Rating.getStarRating(0, color: Colors.grey)
+                        : Rating.getStarRating(currentRating["value"] as double)
                   ],
                 );
               }),
@@ -506,6 +512,7 @@ class ReviewState extends ConsumerState<Review> {
   }
 }
 
+/// Widget for displaying a single category of a product's review.
 class ReviewCategory extends StatelessWidget {
   final String title;
   final double rating;

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:grocy/widget/product_tile.dart';
 import '../models/product.dart';
 
+/// A widget for displaying a product in the wishlist,
+/// allows user to toggle/untoggle products to the wishlist.
 class WishlistItem extends StatelessWidget {
   final Product product;
   final bool isFavorite;

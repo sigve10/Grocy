@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:grocy/extentions/snackbar_context.dart';
 import '../models/tag.dart';
 import '../provider/tag_provider.dart';
 
+/// A widget that can search, select and manage tags associated with a product.
 class TagSearchWidget extends ConsumerStatefulWidget {
   final Function(Tag) onTagSelected;
   final bool allowCreateNewTag;
@@ -25,6 +27,7 @@ class _TagSearchWidgetState extends ConsumerState<TagSearchWidget> {
   TextEditingController tagSearchController = TextEditingController();
   Set<Tag> selectedUserTags = {};
 
+  /// Adds a user tag.
   void addUserTag(Tag tag) async {
     setState(() {
       selectedUserTags.add(tag);
@@ -37,15 +40,21 @@ class _TagSearchWidgetState extends ConsumerState<TagSearchWidget> {
     if (success) {
       widget.onTagSelected(tag);
       ref.read(tagProvider.notifier).fetchTags();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tag added successfully')),
-      );
+      if (mounted) {
+        context.showSnackBar(
+          'Tag fetched successfully',
+        );
+      }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to add tag')),
-      );
-    }  }
+      if (mounted) {
+        context.showSnackBar(
+          'Failed to add tag',
+        );
+      }
+    }
+  }
 
+  /// Removes a user created tag.
   void removeUserTag(Tag tag) {
     setState(() => selectedUserTags.remove(tag));
   }
@@ -140,8 +149,8 @@ class _TagSearchWidgetState extends ConsumerState<TagSearchWidget> {
     final productEan = widget.productEan;
 
     if (primaryTag == null || primaryTag.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Primary tag is not set.')),
+      context.showSnackBar(
+        'Primary tag is not set',
       );
       return;
     }
@@ -222,14 +231,17 @@ class _TagSearchWidgetState extends ConsumerState<TagSearchWidget> {
     if (success) {
       widget.onTagSelected(newTag);
       ref.read(tagProvider.notifier).fetchTags();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tag created successfully')),
-      );
+      if (mounted) {
+        context.showSnackBar(
+          'Successfully added tag',
+        );
+      }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to create tag')),
-      );
+      if (mounted) {
+        context.showSnackBar(
+          'Failed to create the tag',
+        );
+      }
     }
   }
-
 }

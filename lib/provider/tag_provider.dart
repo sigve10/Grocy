@@ -35,6 +35,7 @@ class TagNotifier extends StateNotifier<List<Tag>> {
     }
   }
 
+  /// Adds a tag to the 'tags' table, linking it to a specific product.
   Future<bool> addTagToProduct(Tag tag, String productEan) async {
     try {
       debugPrint('Adding/upserting tag: ${tag.toJson()} into tags table');
@@ -48,6 +49,7 @@ class TagNotifier extends StateNotifier<List<Tag>> {
       /// Link the tag to the product
       debugPrint('Linking tag: ${tag.name} to product: $productEan');
 
+      /// TODO: remove unused local variable, can just use await? I think.
       final productTagResponse = await supabase.from('product_tags').insert({
         'product_ean': productEan,
         'tag_name': tag.name,
@@ -64,9 +66,11 @@ class TagNotifier extends StateNotifier<List<Tag>> {
   }
 }
 
+/// State notifier for managing the primary tags.
 class PrimaryTagNotifier extends StateNotifier<List<Tag>> {
   PrimaryTagNotifier() : super([]);
 
+  /// Fetches all the primary tags in the 'primary_tags' table in the database.
   void fetchPrimaryTags() async {
     print("Fetching primary tags");
     late final PostgrestList? response;

@@ -73,8 +73,23 @@ class _AccountPageState extends ConsumerState<AccountPage> {
       _loading = true;
     });
 
+    final username = _usernameController.text.trim();
+
+    // Now there's actual feedback when user tries to create an invalid username :)
+    if (username.isEmpty || username.length < 5) {
+      if (mounted) {
+        context.showSnackBar(
+          'Username cannot be empty or less than 5 characters!',
+        );
+      }
+      setState(() {
+        _loading = false;
+      });
+      return;
+    }
+
     final userProvider = ref.read(userNotifier.notifier);
-    await userProvider.updateProfile(_usernameController.text.trim());
+    await userProvider.updateProfile(username);
 
     if (mounted) {
       context.showSnackBar('Profile updated successfully!');
@@ -128,11 +143,9 @@ class _AccountPageState extends ConsumerState<AccountPage> {
             'My Account',
             style: TextStyle(
               fontSize: 32,
-              fontWeight: FontWeight.bold,
             ),
           ),
         ),
-        centerTitle: true,
         toolbarHeight: 80,
       ),
       body: Center(
