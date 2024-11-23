@@ -41,7 +41,7 @@ class WishlistScreenState extends ConsumerState<WishlistScreen> {
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
+            child: wishlist.isNotEmpty ? ListView.builder(
               itemCount: wishlist.length,
               itemBuilder: (context, index) {
                 final product = wishlist[index];
@@ -56,7 +56,7 @@ class WishlistScreenState extends ConsumerState<WishlistScreen> {
                   },
                 );
               },
-            ),
+            ) : Center(child: Text("No products in wishlist")),
           ),
         ],
       ),
