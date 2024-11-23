@@ -23,6 +23,7 @@ class TagSearchWidget extends ConsumerStatefulWidget {
   ConsumerState<TagSearchWidget> createState() => _TagSearchWidgetState();
 }
 
+/// Manages the state of the widget
 class _TagSearchWidgetState extends ConsumerState<TagSearchWidget> {
   TextEditingController tagSearchController = TextEditingController();
   Set<Tag> selectedUserTags = {};
@@ -70,7 +71,6 @@ class _TagSearchWidgetState extends ConsumerState<TagSearchWidget> {
   @override
   Widget build(BuildContext context) {
     final tags = ref.watch(tagProvider);
-
     return Column(
       children: [
         Autocomplete<Tag>(
@@ -217,6 +217,7 @@ class _TagSearchWidgetState extends ConsumerState<TagSearchWidget> {
     );
   }
 
+  /// Creates a new tag.
   void _createNewTag(String name, String productEan) async {
     if (productEan.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -225,6 +226,7 @@ class _TagSearchWidgetState extends ConsumerState<TagSearchWidget> {
       return;
     }
 
+    /// Create a new tag object
     Tag newTag = Tag(name: name, primaryTag: widget.primaryTag);
     bool success = await ref
         .read(tagProvider.notifier)
