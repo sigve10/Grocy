@@ -149,38 +149,41 @@ class _AccountPageState extends ConsumerState<AccountPage> {
         toolbarHeight: 80,
       ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            SizedBox(
-              width: 350,
-              child: TextFormField(
-                controller: _usernameController,
-                decoration: const InputDecoration(labelText: 'User Name'),
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                width: 350,
+                child: TextFormField(
+                  controller: _usernameController,
+                  decoration: const InputDecoration(labelText: 'User Name'),
+                ),
               ),
-            ),
-            const SizedBox(height: 18),
-            SizedBox(
-              width: 350,
-              child: TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
-                readOnly: true,
+              const SizedBox(height: 18),
+              SizedBox(
+                width: 350,
+                child: TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                  readOnly: true,
+                ),
               ),
-            ),
-            const SizedBox(height: 26),
-            ElevatedButton(
-              style: ButtonStyles.filled,
-              onPressed: _loading ? null : _updateProfile,
-              child: Text(_loading ? 'Saving...' : 'Update'),
-            ),
-            const SizedBox(height: 18),
-            OutlinedButton(
-              style: ButtonStyles.outlined,
-              onPressed: _signOut,
-              child: const Text('Sign Out'),
-            ),
-          ],
+              const SizedBox(height: 26),
+              ElevatedButton(
+                style: ButtonStyles.filled,
+                onPressed: _loading ? null : _updateProfile,
+                child: Text(_loading ? 'Saving...' : 'Update'),
+              ),
+              const SizedBox(height: 18),
+              OutlinedButton(
+                style: ButtonStyles.outlined,
+                onPressed: _signOut,
+                child: const Text('Sign Out'),
+              ),
+            ],
+          ),
         ),
       ),
     );
