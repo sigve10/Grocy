@@ -42,9 +42,9 @@ class _TabsContainerScreenState extends State<TabsContainerScreen> {
   }
 
   void _setScreen(int index) {
-    navKeys.values.forEach((key) {
+    for (var key in navKeys.values) {
       key.currentState?.popUntil((route) => route.isFirst);
-    });
+    }
 
     setState(() {
       _selectedPageIndex = index;

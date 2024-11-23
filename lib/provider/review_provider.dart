@@ -37,7 +37,6 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
   /// filtering out products whose content is null.
   Future<List<Rating>> fetchReviews(String ean) async {
     late final List<Rating> reviews;
-    print("Just give me the fricking exe");
 
     final query = supabase
         .from("reviews")
@@ -47,11 +46,9 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
 
     try {
       final response = await query;
-      print("Response: $response");
       reviews = (response as List<dynamic>)
           .map((item) => Rating.fromJson(item as Map<String, dynamic>))
           .toList();
-      print("Reviews: $reviews");
     } catch (error) {
       debugPrint('Error fetch reviews from the reviews table, $error');
     }
@@ -106,7 +103,6 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
 
     try {
       final response = await query;
-      print(response);
       result.customerSatisfactionRating = parseInput(response["customer_satisfaction"]);
       result.labelAccuracyRating = parseInput(response["label_accuracy"]);
       result.priceRating = parseInput(response["price_accuracy"]);
@@ -114,8 +110,6 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
     } catch (error) {
       debugPrint('Error fetch reviews from the reviews table, $error');
     }
-
-    print(result.displayable);
 
     return result;
   }
@@ -129,15 +123,7 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
       throw Exception('User not logged in');
     }
 
-    // Temporary until the method is fully tested. Still need to fetch the username for the review though.
-    final username = user.userMetadata?['username'];
-    //Temporary debug prints.
-    debugPrint('Username: $username');
-    debugPrint('the user is $user');
-
     final userId = user.id; // The UUID of the auth user.
-    debugPrint(
-        'the userId is $userId and does this work ? the user.id? ${user.id}');
 
     final reviewData = {
       'user_id': userId,
@@ -151,9 +137,6 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
     try {
       // Insert the review into the "reviews" table
       await supabase.from('reviews').upsert(reviewData);
-
-      // Temporary while testing the method.
-      debugPrint('Review inserted successfully: $reviewData');
     } catch (error) {
       debugPrint('Error inserting review: $error');
     }
@@ -167,10 +150,8 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
     if (user == null) {
       throw Exception('user not logged in');
     }
-    debugPrint('the user is $user');
+
     final userId = user.id; // The UUID of the auth user, from auth.currentUser.
-    debugPrint(
-        'the userId is $userId and does this work ? the user.id? ${user.id}');
 
     try {
       // Delete the specific review that matches both user and product.
@@ -179,7 +160,7 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
           .delete()
           .match({'user_id': userId, 'product_ean': rating.productEan});
     } catch (error) {
-      debugPrint('Errow deleting review: $error');
+      debugPrint('Error deleting review: $error');
     }
   }
 
@@ -194,7 +175,6 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
     }
 
     final userId = user.id; // The UUID of the authenticated user
-    debugPrint('User ID for update: $userId');
 
     // Prepare the new updated review's data before it goes into the database response.
     final updatedReview = {
@@ -206,15 +186,11 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
     };
 
     try {
-      debugPrint('Attempting to update the review for user $userId');
-
       // Update the review in the "reviews" table
       final response = await supabase
           .from('reviews')
           .update(updatedReview)
           .match({'user_id': userId, 'product_ean': updatedRating.productEan});
-
-      debugPrint('Review updated successfully: $response');
 
       // Update the state after the database operation actually goes through.
       state = state.map((review) {

@@ -45,7 +45,6 @@ class TagNotifier extends StateNotifier<List<Tag>> {
       final bool doesTagExist = doesTagExistResponse != null;
 
       if (doesTagExist) {
-        debugPrint('Tag already exists');
         return false;
       }
 
@@ -68,8 +67,6 @@ class TagNotifier extends StateNotifier<List<Tag>> {
   Future<bool> addTagToProduct(Tag tag, String productEan) async {
     try {
       /// Link the tag to the product
-      debugPrint('Linking tag: ${tag.name} to product: $productEan');
-
       await supabase.from('product_tags').insert({
         'product_ean': productEan,
         'tag_name': tag.name,
@@ -92,7 +89,6 @@ class PrimaryTagNotifier extends StateNotifier<List<Tag>> {
 
   /// Fetches all the primary tags in the 'primary_tags' table in the database.
   void fetchPrimaryTags() async {
-    print("Fetching primary tags");
     late final PostgrestList? response;
     late final List<Tag>? primaryTags;
     try {

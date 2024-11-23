@@ -18,8 +18,7 @@ class WishlistProvider extends StateNotifier<List<Product>> {
     final user = supabase.auth.currentUser;
 
     if (user == null) {
-      debugPrint('User not logged in');
-      return; //should be handled with visual feedback for user in the various screens.
+      return;
     }
     try {
       // Grabs all the products that are connected to users in the wishlist table.
@@ -37,7 +36,6 @@ class WishlistProvider extends StateNotifier<List<Product>> {
       }).toList();
 
       state = wishlist;
-      debugPrint('Wishlist fetched:  $state');
     } catch (error) {
       debugPrint('Error fetching the wishlist from the database: $error');
     }
@@ -83,8 +81,6 @@ class WishlistProvider extends StateNotifier<List<Product>> {
         'product_ean': product.ean,
       });
 
-      // Temporary prints for testing.
-      debugPrint('Product added to wishlist: ${product.name}');
     } catch (error) {
       debugPrint('Was unable to add the product: $product to wishlist: $error');
     }
