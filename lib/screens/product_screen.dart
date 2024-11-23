@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:grocy/models/product.dart';
 import 'package:grocy/models/rating.dart';
 import 'package:grocy/provider/review_provider.dart';
-import 'package:grocy/provider/user_provider.dart';
 import '../models/tag.dart';
 import '../provider/product_provider.dart';
 import '../provider/tag_provider.dart';
+import '../widget/review.dart';
 import '../widget/tag_search_widget.dart';
 import 'package:grocy/provider/wishlist_provider.dart';
 import 'package:grocy/extentions/snackbar_context.dart';
@@ -244,48 +244,54 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
             // Product Tags
             Padding(
               padding: const EdgeInsets.all(8.0),
-              child:
-                  FutureBuilder(
-                    future: productNotifier.fetchTagsForProduct(widget.product.ean),
-                    builder: (context, AsyncSnapshot snapshot) {
-                      if (!snapshot.hasData) {
-                        return CircularProgressIndicator();
-                      }
-                      List<Tag> data = snapshot.data as List<Tag>;
-                      return Wrap(
-                        spacing: 8.0,
-                        runSpacing: 8.0,
-                        children: [                  if (widget.product.primaryTag != null && widget.product.primaryTag!.isNotEmpty)
-                          Chip(
-                            label: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.sell,
-                                  size: 20,
-                                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                                ),
-                                SizedBox(width: 4),
-                                Text(widget.product.primaryTag!),
-                              ],
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                              side: BorderSide(
-                                width: 1,
-                                color: Theme.of(context).primaryColor,
+              child: FutureBuilder(
+                future: productNotifier.fetchTagsForProduct(widget.product.ean),
+                builder: (context, AsyncSnapshot snapshot) {
+                  if (!snapshot.hasData) {
+                    return CircularProgressIndicator();
+                  }
+                  List<Tag> data = snapshot.data as List<Tag>;
+                  return Wrap(
+                    spacing: 8.0,
+                    runSpacing: 8.0,
+                    children: [
+                      if (widget.product.primaryTag != null &&
+                          widget.product.primaryTag!.isNotEmpty)
+                        Chip(
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.sell,
+                                size: 20,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withOpacity(0.6),
                               ),
+                              SizedBox(width: 4),
+                              Text(widget.product.primaryTag!),
+                            ],
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            side: BorderSide(
+                              width: 1,
+                              color: Theme.of(context).primaryColor,
                             ),
-                          )
-                        else
-                          const Text("No tag available"), ...(data.map((tag) {
-                          return Chip(
-                            label: Text(tag.name),
-                          );
-                        }).toList())],
-                      );
-                    },
-                  ),
+                          ),
+                        )
+                      else
+                        const Text("No tag available"),
+                      ...(data.map((tag) {
+                        return Chip(
+                          label: Text(tag.name),
+                        );
+                      }).toList())
+                    ],
+                  );
+                },
+              ),
             ),
 
             Divider(
@@ -410,138 +416,5 @@ class RatingsSection extends StatelessWidget {
             )
           ],
         ));
-  }
-}
-
-/// A widget for displaying individual user reviews for the product.
-class Review extends ConsumerStatefulWidget {
-  final Rating rating;
-  const Review({required this.rating, super.key});
-
-  @override
-  ConsumerState<ConsumerStatefulWidget> createState() => ReviewState();
-}
-
-/// State class for the [Review] widget.
-class ReviewState extends ConsumerState<Review> {
-  static const maxReviewLines = 2;
-  late final UserProvider userProvider;
-
-  String reviewerName = "";
-
-  bool isExpanded = false;
-  bool isOverflowing = false;
-  bool isLoading = true;
-
-  void setupReviewData() async {
-    final poster = await userProvider.fetchProfile(widget.rating.userId);
-    setState(() {
-      reviewerName = poster!["username"];
-      isLoading = false;
-    });
-  }
-
-  @override
-  void initState() {
-    userProvider = ref.read(userNotifier.notifier);
-    setupReviewData();
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Card.outlined(
-        child: Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16.0),
-      child: Column(children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const CircleAvatar(child: Icon(Icons.account_circle)),
-            const SizedBox(width: 24),
-            Expanded(
-                child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(reviewerName,
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-                // This allows us to check if the review exceeds X lines
-                LayoutBuilder(builder: (context, constraints) {
-                  final textPaint = TextPainter(
-                      text: TextSpan(text: widget.rating.content!),
-                      maxLines: maxReviewLines,
-                      textDirection: TextDirection.ltr)
-                    ..layout(maxWidth: constraints.maxWidth);
-
-                  isOverflowing = textPaint.didExceedMaxLines;
-
-                  return Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(widget.rating.content!,
-                            maxLines: isExpanded ? null : maxReviewLines,
-                            overflow: isExpanded
-                                ? TextOverflow.visible
-                                : TextOverflow.ellipsis),
-                      ]);
-                })
-              ],
-            ))
-          ],
-        ),
-        if (isExpanded) const SizedBox(height: 8.0),
-        if (isExpanded)
-          GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 4,
-                  mainAxisSpacing: 4,
-                  childAspectRatio: 2.8),
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: widget.rating.displayable.length,
-              itemBuilder: (context, index) {
-                final currentRating = widget.rating.displayable[index];
-                return Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(currentRating["label"]),
-                    if (currentRating["value"] == null)
-                      Rating.getStarRating(0, color: Colors.grey)
-                    else
-                      Rating.getStarRating(currentRating["value"] as double)
-                  ],
-                );
-              }),
-        Row(
-          children: [
-            if (!isExpanded) Rating.getStarRating(widget.rating.averageRating),
-            const Spacer(),
-            TextButton(
-                onPressed: () => setState(() => isExpanded = !isExpanded),
-                child: Text(isExpanded ? "Show less" : "Show more"))
-          ],
-        )
-      ]),
-    ));
-  }
-}
-
-/// Widget for displaying a single category of a product's review.
-class ReviewCategory extends StatelessWidget {
-  final String title;
-  final double rating;
-
-  const ReviewCategory({super.key, required this.title, required this.rating});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [Text(title), Rating.getStarRating(rating)],
-      ),
-    );
   }
 }
