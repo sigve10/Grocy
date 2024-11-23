@@ -180,7 +180,9 @@ class _TagSearchWidgetState extends ConsumerState<TagSearchWidget> {
                   enabled: false,
                   decoration: InputDecoration(
                     labelText: 'Primary Tag',
+                    floatingLabelBehavior: FloatingLabelBehavior.always,
                     hintText: primaryTag,
+                    helperText: "Auto-filled",
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8.0),
                     ),
