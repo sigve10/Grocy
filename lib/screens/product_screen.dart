@@ -252,8 +252,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                         return CircularProgressIndicator();
                       }
                       List<Tag> data = snapshot.data as List<Tag>;
-                      return data.isNotEmpty
-                          ? Wrap(
+                      return Wrap(
                         spacing: 8.0,
                         runSpacing: 8.0,
                         children: [                  if (widget.product.primaryTag != null && widget.product.primaryTag!.isNotEmpty)
@@ -284,8 +283,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                             label: Text(tag.name),
                           );
                         }).toList())],
-                      )
-                          : const Text("No user tags available");
+                      );
                     },
                   ),
             ),
