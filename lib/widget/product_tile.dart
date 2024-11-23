@@ -13,6 +13,27 @@ class ProductTile extends ConsumerWidget {
 
   const ProductTile({required this.product, super.key, this.append});
 
+  IconData getMissingImageIconForProduct() {
+    switch (product.primaryTag) {
+      case "Food":
+        return Icons.lunch_dining;
+      case "Drink":
+        return Icons.coffee;
+      case "Electronics":
+        return Icons.electric_bolt;
+      case "Hygiene":
+        return Icons.soap;
+      case "Medical":
+        return Icons.medical_services;
+      case "Household":
+        return Icons.handyman_outlined;
+      case "Miscellaneous":
+        return Icons.category;
+      default:
+        return Icons.broken_image;
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     ReviewProvider reviewProvider = ref.watch(reviewNotifier.notifier);
@@ -56,7 +77,7 @@ class ProductTile extends ConsumerWidget {
                 height: 60,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) => Icon(
-                  Icons.broken_image,
+                  getMissingImageIconForProduct(),
                   size: 50,
                   color: Theme.of(context)
                       .colorScheme
