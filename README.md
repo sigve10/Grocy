@@ -1,6 +1,14 @@
-# grocy
-
+# Grocy
 A project for Group 2 in Mobile Applications (fall 2024) at NTNU Ålesund.
+
+## Goal
+Have you ever bought something at a grocery store, only to find out it wasn't what you thought you were buying? Or maybe you've noticed that your local brand of crisps has reduced the pack contents from 300g to 200g with the same price tag? Or maybe you just don't think something you've bought was worth the price?
+
+Grocery producers get away with a lot more than other consumer products. If a laptop producer makes a laptop that runs poorly, the sales will drop as people leave reviews. However, if a bin of Greek Yoghurt Ice Cream barely contains greek yoghurt, few people ever speak up about it, and even fewer check what people say.
+
+It is time to hold grocery producers responsible and place them under the same scrutiny that other producers need to endure, and raise their standards to focusing on quality, not just profitability and how many corners they can cut.
+
+Grocy's mission is to hold grocery producers responsible by creating an open and efficient platform for the average Joe, like you and me, to host a network that helps consumers buy responsibly, happily, and to be ensured that they are paying for products made for consumers first, rather than profit. Our application allows consumers to quickly and effectively inform one another of whether they recommend a product or spite it. Join the community and help make grocery shopping a more satisfactory experience.
 
 ## Getting Started
 
@@ -57,38 +65,42 @@ In order to use the app, you have to be authenticated. There is no guest functio
 ### How to use the authentication method
 
 #### Web
-When running it via IDE (either release or debug mode), in order to authenticate you have to either register user (if you don't have one) or sign in, when the link is sent you need to open the email (outlook.com) in the same browser that the app opened in, else the deep linking does not work. For testing purposes, Stig Arne is not registered in the database, so he will need to be registered before being able to get into the app. (Note, email may be instant, or it may take up to 5 minutes for it to be received).
-- Note when running the app this way, session is not stored, and it will prompt you to log in every time. However, if run as an app (not in IDE), your session is stored.
+In order to authenticate you may register as a new user, or sign into an existing user. Upon doing either, a magic link will be sent to your e-mail account. For testing purposes, Stig Arne is not registered in the database, so he will need to be registered before being able to get into the app. **Note**: The email may be delayed anywhere between 1 to 10 minutes. If you don't receive the email in that time, retry the registration/sign-in process.
+
+When running the app in development mode (i.e. from an IDE), sessions will not be saved, and you will have to redo the login process every time you start the app. You will also have to open the magic link from the browser in which the app is hosted. Otherwise, the link will be invalid.
 
 #### Mobile
-Disclaimer: We have only tested on Android
+Disclaimer: The app has not been tested on iOS.
 
-**Test Account is provided in inspera, to be used in both Outlook and Grocy**
-**If not registered:**
-  - Submit will send a link to sign up, where user receives an email from supabase to sign up. Where upon pressing the sign up link, the user is redirected to product item list, where they get a popup dialog window that prompts the user to choose a username. After choosing a username (and it is valid!) they are now directly in the product list.
-**If registered:**
-- Sign in will send a link to sign in, when the link in email is clicked, the user is sent directly to the product list screen (tabs).
+**Test Account is provided in inspera, to be used in both [Outlook](https://outlook.com) and Grocy**
+**When creating an account:**
+  - Submitting will send a link to sign up to the entered email, prompting to click a magic link in order to sign up. Upon pressing the sign up link, the user is redirected to the home screen. Since you are signing up, you will need to enter a username before proceeding to the app. After choosing a valid username they are now directly in the product list.
+**When signing in:**
+- Submitting will send a link to sign in to the entered email, prompting to click a magic link in order to sign in. The user is sent directly to the home screen.
 <br>
 
 # Features
 
 ## Barcode Scanning
-- Scan a grocery item to see if it exists in grocy yet, if not user can add the product and choose which primary tag the product belongs to.
+The barcode scanner can be found on the left-most tab in the bottom navigation. Upon scanning a barcode in this screen, two things may happen:
+1. The product has already been registered by someone else, and you will be taken directly to its review page.
+2. The product has not been scanned yet, and you will be prompted to help set it up. You only have to give the product a primary tag, as the rest will be automatically filled in.
 
-## Product List
-- User can view all products in a list.
+## Home screen
+When in the home screen, the user can view all the products that are available.
   - Each product has an image, title text and amount of reviews for the product.
   - **For Web users:** Due to CORS policies, some images may not load when using the web browser. Enjoy a selection of placeholder icons instead.
-- In the search bar, the user can choose a primary tag or find a user created tag to filter products, for example say the user wants to find only energy drinks, they could filter by "Drinks" and if there is a user added tag of "energy drink" then it would only show products matching this criteria.
-- User can search for a product specifically via the searchbar, such as "bu" or "urn" will match the product "Burn".
+- The user can search for a product by a primary tag or find a user created tag to filter products. For example say the user wants to find only energy drinks, they could filter by "Drinks". If there is a user added tag of "energy drink" then it would only show products matching this criteria.
+- Users can search for a product by its name, by entering a search term into the search bar. Terms like "bu" or "urn" will match the product "Burn".
 
-## Product Item Screen
+## Product Screen
 In the product item screen, the user can do the following:
-- View the overall review rating of the product.
-- Leave a review, which takes user to a screen where they can choose which type of ratings and optional description of their review.
-- Add product to wishlist via the heart icon.
-- Add a user tag to a product, by linking it to an existing primary tag. Such as for example primary tag of "drink" and create  a user tag of "energy" or "energy drink", and then energy drink can be added to Burn.
+- View a summarized average rating of the product.
+- Leave a rating. When leaving a rating, the user can freely choose which categories to leave a rating in, and optionally include a review. Any ratings that are untouched (indicated by the stars being empty and grey), will not contribute to the overall rating of the product.
+- Add the product to wishlist via the heart icon.
+- Add a user tag to a product. When adding tags to a product, you can only add tags that exist in the product's primary tag (the tag outlined in red on the product screen). For example, a Food product can be tagged with "burger", but not with "battery".
 
 ## Wishlist
-- Users can remove products that were previously added from the product item screen, and this will be updated in the database.
+The wishlist provides quick access to products you have selected. This quick access can be used to check reviews on products, or to keep track of new products you want to try.
+- Users can remove products form their wishlist by pressing the heart button either on the wishlist screen or in the product screen.
 
