@@ -29,7 +29,6 @@ const supabaseKey =
 Future<void> main() async {
   await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
   // For the redirects on web.
-  //TODO: set up android and IOS as well, before we push our project at the end.
   // https://supabase.com/docs/guides/getting-started/tutorials/with-flutter?queryGroups=platform&platform=android
   usePathUrlStrategy();
   runApp(ProviderScope(child: const MyApp()));
