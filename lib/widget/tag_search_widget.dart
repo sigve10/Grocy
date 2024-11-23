@@ -208,13 +208,13 @@ class _TagSearchWidgetState extends ConsumerState<TagSearchWidget> {
                 onPressed: () {
                   if (newTagName.trim().isNotEmpty) {
                     final tags = ref.read(tagProvider);
-                    if (tags.any((element) => element.name.toLowerCase() != newTagName.toLowerCase())) {
-                      _createNewTag(newTagName.trim(), productEan!);
-                      Navigator.of(context).pop();
-                    } else {
+                    if (tags.any((element) => element.name.toLowerCase() == newTagName.toLowerCase())) {
                       setState(() {
                         errorText = 'Tag already exists';
                       });
+                    } else {
+                      _createNewTag(newTagName.trim(), productEan!);
+                      Navigator.of(context).pop();
                     }
                   } else {
                     setState(() {
