@@ -26,6 +26,7 @@ class UserProvider extends StateNotifier<Map<String, dynamic>> {
       final data = await query;
 
       if (data == null) {
+        print("User doesn't exist, signing out");
         supabase.auth.signOut();
         return null;
       }
@@ -77,7 +78,13 @@ class UserProvider extends StateNotifier<Map<String, dynamic>> {
         .from('profiles')
         .select('username')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
+
+    if (response == null) {
+        print("User doesn't exist, signing out");
+        supabase.auth.signOut();
+        return false;
+      }
 
     // Check if response or username is null/empty
     if (response.isEmpty ||
