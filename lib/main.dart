@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -42,7 +44,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'Grocy', theme: _theme, home: const _AuthenticationCheck());
+        title: 'Grocy', theme: _theme, home:  _AuthenticationCheckWidget());
   }
 }
 
@@ -50,14 +52,33 @@ class MyApp extends StatelessWidget {
 /// - If user is not authenticated, they are sent to the welcome page that lets them either sign in/ or up.
 /// - If the user doesn't have a username (freshly signed up) then they are given a dialog to choose their username.
 /// - If the user is authenticated and has a username, they are sent directly to the TabsContainerScreen.
-class _AuthenticationCheck extends ConsumerWidget {
-  const _AuthenticationCheck(); // no need for key since it is private
+
+class _AuthenticationCheckWidget extends ConsumerStatefulWidget {
+  @override
+  ConsumerState<ConsumerStatefulWidget> createState() => _AuthenticationCheck();
+}
+
+class _AuthenticationCheck extends ConsumerState<_AuthenticationCheckWidget> {
+  bool _isAuth = false;
+  @override
+  void initState() {
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      final session = data.session;
+
+      setState(() {
+        _isAuth = session != null;
+      });
+    });
+    super.initState();
+  }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final currentSession = supabase.auth.currentSession;
 
-    if (currentSession == null) {
+    if (!_isAuth) {
+      return const WelcomePage();
+    } else if (currentSession == null) {
       return const WelcomePage();
     } else {
       final userProvider = ref.read(userNotifier.notifier);

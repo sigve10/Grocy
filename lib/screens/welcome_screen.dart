@@ -21,7 +21,6 @@ class _WelcomePageState extends State<WelcomePage> {
   final TextEditingController _emailController = TextEditingController();
   bool _isLoading = false;
   bool _isRegistered = false; // Tracks whether the user is already registered.
-  late final StreamSubscription<AuthState> _authStateSubscription;
 
   /// Handles user authentication via Supabase's magic link.
   ///
@@ -91,7 +90,6 @@ class _WelcomePageState extends State<WelcomePage> {
   @override
   void dispose() {
     _emailController.dispose();
-    _authStateSubscription.cancel();
     super.dispose();
   }
 
