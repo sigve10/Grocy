@@ -17,7 +17,7 @@ class LeaveReviewScreen extends ConsumerStatefulWidget {
 /// State class for the [LeaveReviewScreen]
 /// Manages UI state for the review process.
 class LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
-  final Map<String, int?> ratings = {
+  final Map<String, double?> ratings = {
     "Customer Satisfaction": null,
     "Label Accuracy": null,
     "Bang for Buck": null,
@@ -27,7 +27,7 @@ class LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
   final TextEditingController _reviewController = TextEditingController();
   late final ReviewProvider reviewProvider;
 
-  void _updateRating(String category, int? rating) {
+  void _updateRating(String category, double? rating) {
     setState(() {
       ratings[category] = rating;
     });
@@ -44,10 +44,10 @@ class LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
     final Rating? oldReview = await reviewProvider.fetchReview(widget.product.ean, null);
     if (oldReview != null) {
       setState(() {
-        ratings["Customer Satisfaction"] = oldReview.customerSatisfactionRating?.floor();
-        ratings["Label Accuracy"] = oldReview.labelAccuracyRating?.floor();
-        ratings["Bang for Buck"] = oldReview.priceRating?.floor();
-        ratings["Consistency"] = oldReview.consistencyRating?.floor();
+        ratings["Customer Satisfaction"] = oldReview.customerSatisfactionRating?.floor().toDouble();
+        ratings["Label Accuracy"] = oldReview.labelAccuracyRating?.floor().toDouble();
+        ratings["Bang for Buck"] = oldReview.priceRating?.floor().toDouble();
+        ratings["Consistency"] = oldReview.consistencyRating?.floor().toDouble();
         _reviewController.text = oldReview.content ?? "";
       });
     }
@@ -67,10 +67,10 @@ class LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
     final reviewText = _reviewController.text;
 
     final Rating newRating = Rating(productEan: widget.product.ean);
-    newRating.customerSatisfactionRating = ratings["Customer Satisfaction"] as double?;
-    newRating.labelAccuracyRating = ratings["Label Accuracy"] as double?;
-    newRating.priceRating = ratings["Bang for Buck"] as double?;
-    newRating.consistencyRating = ratings["Consistency"] as double?;
+    newRating.customerSatisfactionRating = ratings["Customer Satisfaction"];
+    newRating.labelAccuracyRating = ratings["Label Accuracy"];
+    newRating.priceRating = ratings["Bang for Buck"];
+    newRating.consistencyRating = ratings["Consistency"];
     newRating.content = reviewText.isNotEmpty ? reviewText : null;
 
     await reviewProvider.addReview(newRating);
