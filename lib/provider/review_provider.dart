@@ -92,10 +92,10 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
     try {
       final response = await query;
       print(response);
-      result.customerSatisfactionRating = response["customer_satisfaction"] as double;
-      result.labelAccuracyRating = response["label_accuracy"] as double;
-      result.priceRating = response["price_accuracy"] as double;
-      result.consistencyRating = response["consistency"] as double;
+      result.customerSatisfactionRating = response["customer_satisfaction"] as double?;
+      result.labelAccuracyRating = response["label_accuracy"] as double?;
+      result.priceRating = response["price_accuracy"] as double?;
+      result.consistencyRating = response["consistency"] as double?;
     } catch (error) {
       debugPrint('Error fetch reviews from the reviews table, $error');
     }

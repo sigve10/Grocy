@@ -486,8 +486,9 @@ class ReviewState extends ConsumerState<Review> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(currentRating["label"]),
-                    currentRating["value"] == null ?
-                      Rating.getStarRating(0, color: Colors.grey) :
+                    if (currentRating["value"] == null)
+                      Rating.getStarRating(0, color: Colors.grey)
+                    else
                       Rating.getStarRating(currentRating["value"] as double)
                   ],
                 );
