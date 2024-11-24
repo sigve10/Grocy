@@ -81,10 +81,22 @@ class _AuthenticationCheck extends ConsumerState<_AuthenticationCheckWidget> {
         future: userProvider!.checkUserName(),
         builder: (context, AsyncSnapshot<bool?> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator();
+              return Center(
+                child: SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(),
+                ),
+              );
           } else if (snapshot.data == null) {
             supabase.auth.signOut();
-            return CircularProgressIndicator();
+              return Center(
+                child: SizedBox(
+                  width: 40,
+                  height: 40,
+                  child: CircularProgressIndicator(),
+                ),
+              );
           } else if (snapshot.data == false) {
             WidgetsBinding.instance.addPostFrameCallback((_) async {
               await showDialog(
