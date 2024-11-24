@@ -222,7 +222,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
                     icon: Icon(
                       Icons.add_circle,
                       color: Theme.of(context).colorScheme.primary,
-                      size: 24, // Adjust the size as needed
+                      size: 24,
                     ),
                     onPressed: _onAddUserTagPressed,
                     tooltip: 'Add User Tag',
@@ -299,7 +299,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
               thickness: 0.5,
             ),
 
-            RatingsSection(
+            _RatingsSection(
               product: widget.product,
               onReviewLeft: getReviews,
               rating: ratingSummary,
@@ -340,21 +340,43 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
 }
 
 /// A section that displays the ratings of a product.
-class RatingsSection extends StatelessWidget {
+class _RatingsSection extends StatefulWidget {
   final Rating rating;
   final Product product;
   final Function onReviewLeft;
 
-  const RatingsSection(
-      {super.key,
-      required this.rating,
+  const _RatingsSection(
+      {required this.rating,
       required this.product,
       required this.onReviewLeft});
 
-  List<Widget> createRatings() {
+  @override
+  _RatingsSectionState createState() => _RatingsSectionState();
+}
+
+
+class _RatingsSectionState extends State<_RatingsSection> {
+  bool? hasUserReview;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkUserReview();
+  }
+
+  /// Checks if the user has left a review for the product.
+  Future<void> _checkUserReview() async {
+    final userReview =
+        await ReviewProvider().fetchReview(widget.product.ean, null);
+    setState(() {
+      hasUserReview = userReview != null;
+    });
+  }
+
+  List<Widget> _createRatings() {
     final List<Widget> retval = [];
 
-    for (Map<String, dynamic> currentRating in rating.displayable) {
+    for (Map<String, dynamic> currentRating in widget.rating.displayable) {
       retval.add(Card.filled(
           child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -377,44 +399,63 @@ class RatingsSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("Ratings",
-                style: Theme.of(context).textTheme.titleMedium!.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    )),
-            const SizedBox(height: 24.0),
-            GridView(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 4,
-                    mainAxisSpacing: 4,
-                    mainAxisExtent: 94),
-                physics: const NeverScrollableScrollPhysics(),
-                shrinkWrap: true,
-                children: createRatings()),
-            const SizedBox(height: 16.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
+      padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 24.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "Ratings",
+            style: Theme.of(context).textTheme.titleMedium!.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          const SizedBox(height: 24.0),
+
+          GridView(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 4,
+              mainAxisSpacing: 4,
+              mainAxisExtent: 94,
+            ),
+            physics: const NeverScrollableScrollPhysics(),
+            shrinkWrap: true,
+            children: _createRatings(),
+          ),
+
+          const SizedBox(height: 16.0),
+
+          // The new dynamic review button 🐱‍🏍
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              if (hasUserReview == null)
+                CircularProgressIndicator() // How big is this one ?
+              else
                 FilledButton(
-                  onPressed: () {
-                    Navigator.push(
+                  onPressed: () async {
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => LeaveReviewScreen(
-                            product: product, onReviewLeft: onReviewLeft),
+                          product: widget.product,
+                          onReviewLeft: widget.onReviewLeft,
+                        ),
                       ),
                     );
+
+                    // Refresh it after user has just left a review, so that button changes to Edit immediately 😎
+                    _checkUserReview();
                   },
-                  child: const Text("Leave a Review"),
+                  child: Text( // Hope whoever reads this has a good day
+                    hasUserReview! ? "Edit Review" : "Leave a Review",
+                  ),
                 ),
-              ],
-            )
-          ],
-        ));
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
