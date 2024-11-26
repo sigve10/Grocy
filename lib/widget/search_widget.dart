@@ -15,10 +15,13 @@ class SearchWidget extends ConsumerStatefulWidget {
 
 class _SearchWidgetState extends ConsumerState<SearchWidget> {
   late final SearchProvider _searchProvider;
+  final TextEditingController searchController = TextEditingController();
 
   @override
   void initState() {
     _searchProvider = ref.read(searchProvider.notifier);
+    final searchText = ref.read(searchProvider).searchText;
+    searchController.text = searchText;
     super.initState();
   }
 
@@ -35,6 +38,7 @@ class _SearchWidgetState extends ConsumerState<SearchWidget> {
 
   @override
   Widget build(BuildContext context) {
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: ExpansionTile(
@@ -52,6 +56,7 @@ class _SearchWidgetState extends ConsumerState<SearchWidget> {
           iconSize: 24,
         ),
         title: TextField(
+          controller: searchController,
           decoration: InputDecoration(
             hintText: "Search products...",
             prefixIcon: const Icon(Icons.search),
@@ -78,7 +83,6 @@ class _SearchWidgetMainTags extends ConsumerStatefulWidget {
 
 class _SearchWidgetMainTagsState extends ConsumerState<_SearchWidgetMainTags> {
   late final SearchProvider _searchProvider;
-  Tag? selectedMainTag;
 
   @override
   void initState() {
@@ -93,16 +97,11 @@ class _SearchWidgetMainTagsState extends ConsumerState<_SearchWidgetMainTags> {
 
   /// Checks if a [tag] is currently selected as main [tag] or not.
   bool isTagSelected(Tag tag) {
-    // Changed it because the == didn't quite work with the parsing.
-    return selectedMainTag?.name == tag.name;
+    return ref.read(searchProvider).mainTag?.name == tag.name;
   }
 
   /// Sets the main tag. Updates ui with the tag selected.
   void setTagCategory(Tag? selected) {
-    setState(() {
-      selectedMainTag = selected;
-    });
-
     _searchProvider.setMainTag(selected);
   }
 
@@ -138,11 +137,9 @@ class _SearchWidgetUserTags extends ConsumerStatefulWidget {
 class _SearchWidgetUserTagsState extends ConsumerState<_SearchWidgetUserTags> {
   late final SearchProvider _searchProvider;
   TextEditingController tagSearchController = TextEditingController();
-  Set<Tag> selectedUserTags = {};
 
   void addUserTag(Tag tag) {
     setState(() {
-      selectedUserTags.add(tag);
       tagSearchController.clear();
     });
     _searchProvider.addUserTag(tag);
@@ -158,14 +155,14 @@ class _SearchWidgetUserTagsState extends ConsumerState<_SearchWidgetUserTags> {
   }
 
   void removeUserTag(Tag tag) {
-    setState(() => selectedUserTags.remove(tag));
     _searchProvider.removeUserTag(tag);
   }
 
   @override
   Widget build(BuildContext context) {
     final primaryTag = ref.watch(searchProvider).mainTag;
-    List<Tag >tags = ref.watch(tagProvider);
+    final selectedTags = ref.watch(searchProvider).userTags;
+    List<Tag> tags = ref.watch(tagProvider);
 
     if (primaryTag != null) {
       tags = tags.where((tag) => tag.primaryTag == primaryTag.name).toList();
@@ -205,7 +202,7 @@ class _SearchWidgetUserTagsState extends ConsumerState<_SearchWidgetUserTags> {
           spacing: 4.0,
           runSpacing: 4.0,
           alignment: WrapAlignment.center,
-          children: selectedUserTags.map((tag) {
+          children: selectedTags.map((tag) {
             return Chip(
               label: Row(
                 mainAxisSize: MainAxisSize.min,
