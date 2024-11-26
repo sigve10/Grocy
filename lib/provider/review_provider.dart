@@ -143,7 +143,7 @@ class ReviewProvider extends StateNotifier<List<Rating>> {
   }
 
   /// Delete one "specific" review from the database.
-  void deleteReview(Rating rating) async {
+  Future<void> deleteReview(Rating rating) async {
     // Get the user that's authenticated / logged in user
     final user = supabase.auth.currentUser;
 

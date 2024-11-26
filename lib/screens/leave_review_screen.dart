@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:grocy/extentions/snackbar_context.dart';
 import 'package:grocy/models/product.dart';
 import 'package:grocy/models/rating.dart';
 import 'package:grocy/provider/review_provider.dart';
@@ -86,6 +87,32 @@ class LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
     }
     if (mounted) {
     Navigator.pop(context);
+    }
+  }
+
+  /// Delete the authenticated user's review.
+  Future<void> _deleteReview() async {
+    final rating = Rating(productEan: widget.product.ean);
+    try {
+      await reviewProvider.deleteReview(rating);
+
+      // Notify parent widget that a review has been deleted.
+      if (widget.onReviewLeft != null) {
+        widget.onReviewLeft!();
+      }
+
+      if (mounted) {
+        context.showSnackBar('Review successfully deleted');
+      }
+
+      // Instead of staying in leave review screen, navigate to the product screen 😎
+      if (mounted) {
+        Navigator.pop(context);
+      }
+    } catch (error) {
+      if (mounted) {
+        context.showSnackBar('Failed to delete the review: $error');
+      }
     }
   }
 
@@ -179,27 +206,110 @@ class LeaveReviewScreenState extends ConsumerState<LeaveReviewScreen> {
                 ),
               ),
               const SizedBox(height: 20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  OutlinedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text("Cancel"),
+                  Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment
+                                  .center, // Center the new Delete text (button) below Cancel :)
+                              children: [
+                                OutlinedButton(
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: const Text("Cancel"),
+                                ),
+                                const SizedBox(
+                                    height:
+                                        12), // so that the cancel button isn't squished to the delete text button.
+                                InkWell(
+                                  onTap: () async {
+                                    final bool? confirmDelete =
+                                        await showDialog<bool>(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          title: const Text("Confirm Deletion"),
+                                          content: const Text(
+                                              "Are you sure you want to delete this review?"),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.pop(
+                                                    context, false);
+                                              },
+                                              child: const Text("Cancel"),
+                                            ),
+                                            const SizedBox(width: 2),
+                                            ElevatedButton(
+                                              onPressed: () async {
+                                                Navigator.pop(context, true);
+                                                await _deleteReview();
+                                              },
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor:
+                                                    Theme.of(context)
+                                                        .colorScheme
+                                                        .error,
+                                              ),
+                                              child: Text(
+                                                "Confirm",
+                                                style: TextStyle(
+                                                  color: Theme.of(context)
+                                                      .colorScheme
+                                                      .onPrimary,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                    );
+
+                                    if (confirmDelete == true) {
+                                      _reviewController.clear();
+                                    }
+                                  },
+                                  child: Text(
+                                    "Delete",
+                                    style: TextStyle(
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(
+                                width:
+                                    32), // Added space since I changed the row/column setup to add delete text button.
+                            ElevatedButton(
+                              onPressed: leaveReview,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor:
+                                    Theme.of(context).colorScheme.primary,
+                              ),
+                              child: Text(
+                                "Submit",
+                                style: TextStyle(
+                                  color:
+                                      Theme.of(context).colorScheme.onPrimary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                  ElevatedButton(
-                    onPressed: leaveReview,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                    ),
-                    child: Text(
-                      "Submit",
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimary,
-                      ),
-                    ),
-                  )
                 ],
               ),
             ],
